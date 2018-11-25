@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -37,6 +38,10 @@ func main() {
 
 				title := node.FirstChild.FirstChild.Data
 				href := scrape.Attr(node.FirstChild, "href")
+
+				if strings.Contains(href, "wikipedia") {
+					continue
+				} 
 
 				url := domain + href + ".txt.utf-8"
 				name := filepath.Join(path, title+".txt.gz")
