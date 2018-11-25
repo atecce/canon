@@ -52,6 +52,7 @@ func main() {
 					defer wg.Done()
 
 					wwwURL := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
+					// TODO rm all forward slashes from title
 					kbURL := filepath.Join(path, node.FirstChild.FirstChild.Data+".txt.gz")
 
 					if strings.Contains(wwwURL, "wikipedia") {
