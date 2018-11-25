@@ -34,7 +34,9 @@ func main() {
 
 		path := filepath.Join(dir, author)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			_ = os.Mkdir(path, 0700)
+			if mkErr := os.Mkdir(path, 0700); mkErr != nil {
+				log.Println("[ERR]", err)
+			}
 		}
 
 		for _, node := range e.DOM.Next().Children().Nodes {
@@ -47,30 +49,33 @@ func main() {
 					continue
 				}
 
-				log.Println("[INFO] getting", wwwURL)
-				res, err := http.Get(wwwURL)
-				if err != nil {
-					log.Println("[ERR]", err)
-					continue
-				}
-				defer res.Body.Close()
+				if _, err := os.Stat(kbURL); os.IsNotExist(err) {
 
-				log.Println("[INFO] creating", kbURL)
-				f, err := os.Create(kbURL)
-				if err != nil {
-					log.Println("[ERR]", err)
-					continue
-				}
-				defer f.Close()
+					log.Println("[INFO] getting", wwwURL)
+					res, err := http.Get(wwwURL)
+					if err != nil {
+						log.Println("[ERR]", err)
+						continue
+					}
+					defer res.Body.Close()
 
-				w := gzip.NewWriter(f)
-				defer w.Close()
+					log.Println("[INFO] creating", kbURL)
+					f, err := os.Create(kbURL)
+					if err != nil {
+						log.Println("[ERR]", err)
+						continue
+					}
+					defer f.Close()
 
-				log.Println("[INFO] copying")
-				_, err = io.Copy(w, res.Body)
-				if err != nil {
-					log.Println("[ERR]", err)
-					continue
+					w := gzip.NewWriter(f)
+					defer w.Close()
+
+					log.Println("[INFO] copying")
+					_, err = io.Copy(w, res.Body)
+					if err != nil {
+						log.Println("[ERR]", err)
+						continue
+					}
 				}
 			}
 		}
