@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/yhat/scrape"
-	"golang.org/x/net/html"
 
 	"github.com/gocolly/colly"
 )
@@ -21,8 +20,6 @@ const domain = "https://www.gutenberg.org/"
 var dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
 
 func main() {
-
-	// TODO pick up where you left off
 
 	authorCollector := colly.NewCollector()
 
@@ -41,6 +38,7 @@ func main() {
 			}
 		}
 
+		// TODO pool of goroutines on a channel
 		var wg sync.WaitGroup
 		for _, node := range e.DOM.Next().Children().Nodes {
 			if node.FirstChild.FirstChild != nil {
@@ -48,12 +46,11 @@ func main() {
 				wg.Add(1)
 
 				// TODO try again on err?
-				go func(node html.Node) {
+				go func(href, title string) {
 					defer wg.Done()
 
-					wwwURL := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
-					// TODO rm all forward slashes from title
-					kbURL := filepath.Join(path, node.FirstChild.FirstChild.Data+".txt.gz")
+					wwwURL := domain + href + ".txt.utf-8"
+					kbURL := filepath.Join(path, strings.Replace(title, "/", "|", -1)+".txt.gz")
 
 					if strings.Contains(wwwURL, "wikipedia") {
 						return
@@ -87,7 +84,7 @@ func main() {
 							return
 						}
 					}
-				}(*node)
+				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
 			}
 		}
 		wg.Wait()
