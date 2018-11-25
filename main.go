@@ -8,8 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/yhat/scrape"
+	"golang.org/x/net/html"
 
 	"github.com/gocolly/colly"
 )
@@ -39,46 +41,55 @@ func main() {
 			}
 		}
 
+		var wg sync.WaitGroup
 		for _, node := range e.DOM.Next().Children().Nodes {
 			if node.FirstChild.FirstChild != nil {
 
-				wwwURL := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
-				kbURL := filepath.Join(path, node.FirstChild.FirstChild.Data+".txt.gz")
+				wg.Add(1)
 
-				if strings.Contains(wwwURL, "wikipedia") {
-					continue
-				}
+				// TODO try again on err?
+				go func(node html.Node) {
+					defer wg.Done()
 
-				if _, err := os.Stat(kbURL); os.IsNotExist(err) {
+					wwwURL := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
+					kbURL := filepath.Join(path, node.FirstChild.FirstChild.Data+".txt.gz")
 
-					log.Println("[INFO] get", wwwURL)
-					res, err := http.Get(wwwURL)
-					if err != nil {
-						log.Println("[ERR]", err)
-						continue
+					if strings.Contains(wwwURL, "wikipedia") {
+						return
 					}
-					defer res.Body.Close()
 
-					log.Println("[INFO] creating", kbURL)
-					f, err := os.Create(kbURL)
-					if err != nil {
-						log.Println("[ERR]", err)
-						continue
+					if _, err := os.Stat(kbURL); os.IsNotExist(err) {
+
+						log.Println("[INFO] get", wwwURL)
+						res, err := http.Get(wwwURL)
+						if err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+						defer res.Body.Close()
+
+						log.Println("[INFO] creating", kbURL)
+						f, err := os.Create(kbURL)
+						if err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+						defer f.Close()
+
+						w := gzip.NewWriter(f)
+						defer w.Close()
+
+						log.Println("[INFO] copying", wwwURL, "to", kbURL)
+						_, err = io.Copy(w, res.Body)
+						if err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
 					}
-					defer f.Close()
-
-					w := gzip.NewWriter(f)
-					defer w.Close()
-
-					log.Println("[INFO] copying")
-					_, err = io.Copy(w, res.Body)
-					if err != nil {
-						log.Println("[ERR]", err)
-						continue
-					}
-				}
+				}(*node)
 			}
 		}
+		wg.Wait()
 	})
 
 	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
