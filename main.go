@@ -40,26 +40,23 @@ func main() {
 		for _, node := range e.DOM.Next().Children().Nodes {
 			if node.FirstChild.FirstChild != nil {
 
-				title := node.FirstChild.FirstChild.Data
-				href := scrape.Attr(node.FirstChild, "href")
+				wwwURL := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
+				kbURL := filepath.Join(path, node.FirstChild.FirstChild.Data+".txt.gz")
 
-				if strings.Contains(href, "wikipedia") {
+				if strings.Contains(wwwURL, "wikipedia") {
 					continue
 				}
 
-				url := domain + href + ".txt.utf-8"
-				name := filepath.Join(path, title+".txt.gz")
-
-				log.Println("[INFO] getting", url)
-				res, err := http.Get(url)
+				log.Println("[INFO] getting", wwwURL)
+				res, err := http.Get(wwwURL)
 				if err != nil {
 					log.Println("[ERR]", err)
 					continue
 				}
 				defer res.Body.Close()
 
-				log.Println("[INFO] creating", name)
-				f, err := os.Create(name)
+				log.Println("[INFO] creating", kbURL)
+				f, err := os.Create(kbURL)
 				if err != nil {
 					log.Println("[ERR]", err)
 					continue
