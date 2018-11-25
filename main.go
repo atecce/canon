@@ -51,7 +51,7 @@ func main() {
 
 				if _, err := os.Stat(kbURL); os.IsNotExist(err) {
 
-					log.Println("[INFO] getting", wwwURL)
+					log.Println("[INFO] get", wwwURL)
 					res, err := http.Get(wwwURL)
 					if err != nil {
 						log.Println("[ERR]", err)
