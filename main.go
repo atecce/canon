@@ -20,7 +20,7 @@ func main() {
 	authorCollector := colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
-		fmt.Println("get", r.URL)
+		fmt.Println("[INFO] get", r.URL)
 	})
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
@@ -39,27 +39,32 @@ func main() {
 				href := scrape.Attr(node.FirstChild, "href")
 
 				url := domain + href + ".txt.utf-8"
+				name := filepath.Join(path, title+".txt.gz")
+
 				fmt.Println("[INFO] getting", url)
 				res, err := http.Get(url)
 				if err != nil {
 					fmt.Println("[ERR]", err)
+					continue
 				}
 				defer res.Body.Close()
 
-				name := filepath.Join(path, title+".txt.gz")
 				fmt.Println("[INFO] creating", name)
 				f, err := os.Create(name)
 				if err != nil {
 					fmt.Println("[ERR]", err)
+					continue
 				}
 				defer f.Close()
 
 				w := gzip.NewWriter(f)
 				defer w.Close()
 
+				fmt.Println("[INFO] copying")
 				_, err = io.Copy(w, res.Body)
 				if err != nil {
 					fmt.Println("[ERR]", err)
+					continue
 				}
 			}
 		}
