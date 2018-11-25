@@ -29,11 +29,9 @@ func main() {
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
 
-		author := e.ChildText("a")
-
-		path := filepath.Join(dir, author)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			if mkErr := os.Mkdir(path, 0700); mkErr != nil {
+		author := filepath.Join(dir, e.ChildText("a"))
+		if _, err := os.Stat(author); os.IsNotExist(err) {
+			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
 				log.Println("[ERR]", err)
 			}
 		}
@@ -50,7 +48,7 @@ func main() {
 					defer wg.Done()
 
 					wwwURL := domain + href + ".txt.utf-8"
-					kbURL := filepath.Join(path, strings.Replace(title, "/", "|", -1)+".txt.gz")
+					kbURL := filepath.Join(author, strings.Replace(title, "/", "|", -1)+".txt.gz")
 
 					if strings.Contains(wwwURL, "wikipedia") {
 						return
