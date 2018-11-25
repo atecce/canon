@@ -78,7 +78,7 @@ func main() {
 						log.Println("[INFO] copying", wwwURL, "to", kbURL)
 						_, err = io.Copy(w, res.Body)
 						if err != nil {
-							log.Println("[ERR]", err)
+							log.Println("[ERR] copying", wwwURL, "to", kbURL, ":", err)
 							return
 						}
 					}
