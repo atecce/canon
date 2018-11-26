@@ -19,19 +19,6 @@ import (
 	"github.com/gocolly/colly"
 )
 
-type doc struct {
-	Text     string
-	Entities []prose.Entity
-}
-
-func newDoc(body []byte) doc {
-	d, _ := prose.NewDocument(string(body))
-	return doc{
-		Text:     d.Text,
-		Entities: d.Entities(),
-	}
-}
-
 const domain = "https://www.gutenberg.org/"
 
 var dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
