@@ -2,7 +2,8 @@ package main
 
 import (
 	"compress/gzip"
-	"io"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,10 +11,25 @@ import (
 	"strings"
 	"sync"
 
+	"gopkg.in/jdkato/prose.v2"
+
 	"github.com/yhat/scrape"
 
 	"github.com/gocolly/colly"
 )
+
+type doc struct {
+	Text     string
+	Entities []prose.Entity
+}
+
+func newDoc(body []byte) doc {
+	d, _ := prose.NewDocument(string(body))
+	return doc{
+		Text:     d.Text,
+		Entities: d.Entities(),
+	}
+}
 
 const domain = "https://www.gutenberg.org/"
 
@@ -48,7 +64,7 @@ func main() {
 					defer wg.Done()
 
 					wwwURL := domain + href + ".txt.utf-8"
-					kbURL := filepath.Join(author, strings.Replace(title, "/", "|", -1)+".txt.gz")
+					kbURL := filepath.Join(author, strings.Replace(title, "/", "|", -1)+".json.gz")
 
 					if strings.Contains(wwwURL, "wikipedia") {
 						return
@@ -64,6 +80,18 @@ func main() {
 						}
 						defer res.Body.Close()
 
+						body, err := ioutil.ReadAll(res.Body)
+						if err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+
+						proseDoc, err := prose.NewDocument(string(body))
+						if err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+
 						log.Println("[INFO] create", kbURL)
 						f, err := os.Create(kbURL)
 						if err != nil {
@@ -75,10 +103,13 @@ func main() {
 						w := gzip.NewWriter(f)
 						defer w.Close()
 
-						log.Println("[INFO] copy", wwwURL, "to", kbURL)
-						_, err = io.Copy(w, res.Body)
+						log.Println("[INFO] encode", wwwURL, "to", kbURL)
+						err = json.NewEncoder(w).Encode(doc{
+							Text:     proseDoc.Text,
+							Entities: proseDoc.Entities(),
+						})
 						if err != nil {
-							log.Println("[ERR] copy", wwwURL, "to", kbURL, ":", err)
+							log.Println("[ERR] encode", wwwURL, "to", kbURL, ":", err)
 							return
 						}
 					}
