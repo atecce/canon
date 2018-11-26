@@ -19,19 +19,21 @@ import (
 	"github.com/gocolly/colly"
 )
 
+// TODO rm licenses at the end
+
 const domain = "https://www.gutenberg.org/"
 
 var dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
 
 func readDoc(url string) (*prose.Document, error) {
 
-	in, err := os.Open(url)
+	f, err := os.Open(url)
 	if err != nil {
 		return nil, err
 	}
-	defer in.Close()
+	defer f.Close()
 
-	r, err := gzip.NewReader(in)
+	r, err := gzip.NewReader(f)
 	if err != nil {
 		return nil, err
 	}
@@ -128,14 +130,14 @@ func main() {
 						}
 
 						log.Println("[INFO] create", kbJSONURL)
-						out, err := os.Create(kbJSONURL)
+						f, err := os.Create(kbJSONURL)
 						if err != nil {
 							log.Println("[ERR]", err)
 							return
 						}
-						defer out.Close()
+						defer f.Close()
 
-						w := gzip.NewWriter(out)
+						w := gzip.NewWriter(f)
 						defer w.Close()
 
 						log.Println("[INFO] encode", kbJSONURL)
