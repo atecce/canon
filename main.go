@@ -116,29 +116,33 @@ func main() {
 						}
 					}
 
-					doc, err := readDoc(kbTextURL)
-					if err != nil {
-						log.Println("[ERR] reading", kbTextURL, ":", err)
-						return
-					}
-
 					kbJSONURL := filepath.Join(author, name+".json.gz")
+					if _, err := os.Stat(kbJSONURL); os.IsNotExist(err) {
 
-					log.Println("[INFO] create", kbJSONURL)
-					out, err := os.Create(kbJSONURL)
-					if err != nil {
-						log.Println("[ERR]", err)
-						return
-					}
-					defer out.Close()
+						log.Println("[INFO]", kbJSONURL, "not on kbfs. extracting entities")
 
-					w := gzip.NewWriter(out)
-					defer w.Close()
+						doc, err := readDoc(kbTextURL)
+						if err != nil {
+							log.Println("[ERR] reading", kbTextURL, ":", err)
+							return
+						}
 
-					log.Println("[INFO] encode", kbJSONURL)
-					if err := json.NewEncoder(w).Encode(doc.Entities()); err != nil {
-						log.Println("[ERR]", err)
-						return
+						log.Println("[INFO] create", kbJSONURL)
+						out, err := os.Create(kbJSONURL)
+						if err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+						defer out.Close()
+
+						w := gzip.NewWriter(out)
+						defer w.Close()
+
+						log.Println("[INFO] encode", kbJSONURL)
+						if err := json.NewEncoder(w).Encode(doc.Entities()); err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
 			}
