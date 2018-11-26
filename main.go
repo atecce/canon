@@ -64,7 +64,7 @@ func main() {
 						}
 						defer res.Body.Close()
 
-						log.Println("[INFO] creating", kbURL)
+						log.Println("[INFO] create", kbURL)
 						f, err := os.Create(kbURL)
 						if err != nil {
 							log.Println("[ERR]", err)
@@ -75,10 +75,10 @@ func main() {
 						w := gzip.NewWriter(f)
 						defer w.Close()
 
-						log.Println("[INFO] copying", wwwURL, "to", kbURL)
+						log.Println("[INFO] copy", wwwURL, "to", kbURL)
 						_, err = io.Copy(w, res.Body)
 						if err != nil {
-							log.Println("[ERR] copying", wwwURL, "to", kbURL, ":", err)
+							log.Println("[ERR] copy", wwwURL, "to", kbURL, ":", err)
 							return
 						}
 					}
