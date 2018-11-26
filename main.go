@@ -19,8 +19,6 @@ import (
 	"github.com/gocolly/colly"
 )
 
-// TODO rm licenses at the end
-
 const domain = "https://www.gutenberg.org/"
 
 var dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
@@ -42,6 +40,15 @@ func readDoc(url string) (*prose.Document, error) {
 	text, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
+	}
+
+	// chomp the boilerplate at the end
+	corpus := string(text)
+	i := strings.Index(corpus, "End of the Project Gutenberg EBook")
+	if i == -1 {
+		log.Println("[WARN] no license at end of", url)
+	} else {
+		corpus = corpus[:i]
 	}
 
 	doc, err := prose.NewDocument(string(text))
@@ -118,7 +125,7 @@ func main() {
 						}
 					}
 
-					kbJSONURL := filepath.Join(author, name+".json.gz")
+					kbJSONURL := filepath.Join(author, name+".entities.json.gz")
 					if _, err := os.Stat(kbJSONURL); os.IsNotExist(err) {
 
 						log.Println("[INFO]", kbJSONURL, "not on kbfs. extracting entities")
