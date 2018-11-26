@@ -23,6 +23,33 @@ const domain = "https://www.gutenberg.org/"
 
 var dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
 
+func readDoc(url string) (*prose.Document, error) {
+
+	in, err := os.Open(url)
+	if err != nil {
+		return nil, err
+	}
+	defer in.Close()
+
+	r, err := gzip.NewReader(in)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	text, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := prose.NewDocument(string(text))
+	if err != nil {
+		return nil, err
+	}
+
+	return doc, nil
+}
+
 func main() {
 
 	authorCollector := colly.NewCollector()
@@ -89,29 +116,9 @@ func main() {
 						}
 					}
 
-					in, err := os.Open(kbTextURL)
+					doc, err := readDoc(kbTextURL)
 					if err != nil {
-						log.Println("[ERR]", err)
-						return
-					}
-					defer in.Close()
-
-					r, err := gzip.NewReader(in)
-					if err != nil {
-						log.Println("[ERR]", err)
-						return
-					}
-					defer r.Close()
-
-					text, err := ioutil.ReadAll(r)
-					if err != nil {
-						log.Println("[ERR]", err)
-						return
-					}
-
-					doc, err := prose.NewDocument(string(text))
-					if err != nil {
-						log.Println("[ERR]", err)
+						log.Println("[ERR] reading", kbTextURL, ":", err)
 						return
 					}
 
