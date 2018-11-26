@@ -3,6 +3,7 @@ package main
 import (
 	"compress/gzip"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -63,14 +64,17 @@ func main() {
 				go func(href, title string) {
 					defer wg.Done()
 
-					wwwURL := domain + href + ".txt.utf-8"
-					kbURL := filepath.Join(author, strings.Replace(title, "/", "|", -1)+".json.gz")
+					name := strings.Replace(title, "/", "|", -1)
 
+					wwwURL := domain + href + ".txt.utf-8"
 					if strings.Contains(wwwURL, "wikipedia") {
 						return
 					}
 
-					if _, err := os.Stat(kbURL); os.IsNotExist(err) {
+					kbTextURL := filepath.Join(author, name+".txt.gz")
+					if _, err := os.Stat(kbTextURL); os.IsNotExist(err) {
+
+						log.Println("[INFO]", kbTextURL, "not on kbfs. fetching")
 
 						log.Println("[INFO] get", wwwURL)
 						res, err := http.Get(wwwURL)
@@ -80,20 +84,8 @@ func main() {
 						}
 						defer res.Body.Close()
 
-						body, err := ioutil.ReadAll(res.Body)
-						if err != nil {
-							log.Println("[ERR]", err)
-							return
-						}
-
-						proseDoc, err := prose.NewDocument(string(body))
-						if err != nil {
-							log.Println("[ERR]", err)
-							return
-						}
-
-						log.Println("[INFO] create", kbURL)
-						f, err := os.Create(kbURL)
+						log.Println("[INFO] create", kbTextURL)
+						f, err := os.Create(kbTextURL)
 						if err != nil {
 							log.Println("[ERR]", err)
 							return
@@ -103,15 +95,56 @@ func main() {
 						w := gzip.NewWriter(f)
 						defer w.Close()
 
-						log.Println("[INFO] encode", wwwURL, "to", kbURL)
-						err = json.NewEncoder(w).Encode(doc{
-							Text:     proseDoc.Text,
-							Entities: proseDoc.Entities(),
-						})
-						if err != nil {
-							log.Println("[ERR] encode", wwwURL, "to", kbURL, ":", err)
+						log.Println("[INFO] copy", wwwURL, "to", kbTextURL)
+						if _, err := io.Copy(w, res.Body); err != nil {
+							log.Println("[ERR] copy", wwwURL, "to", kbTextURL, ":", err)
 							return
 						}
+					}
+
+					in, err := os.Open(kbTextURL)
+					if err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+					defer in.Close()
+
+					r, err := gzip.NewReader(in)
+					if err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+					defer r.Close()
+
+					text, err := ioutil.ReadAll(r)
+					if err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+
+					doc, err := prose.NewDocument(string(text))
+					if err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+
+					kbJSONURL := filepath.Join(author, name+".json.gz")
+
+					log.Println("[INFO] create", kbJSONURL)
+					out, err := os.Create(kbJSONURL)
+					if err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+					defer out.Close()
+
+					w := gzip.NewWriter(out)
+					defer w.Close()
+
+					log.Println("[INFO] encode", kbJSONURL)
+					if err := json.NewEncoder(w).Encode(doc.Entities()); err != nil {
+						log.Println("[ERR]", err)
+						return
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
 			}
