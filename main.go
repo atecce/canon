@@ -113,6 +113,22 @@ func extractDoc(url string) (*document, error) {
 	return &doc, nil
 }
 
+func writeJSON(doc *document, url string) error {
+	f, err := os.Create(url)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := gzip.NewWriter(f)
+	defer w.Close()
+
+	if err := json.NewEncoder(w).Encode(doc); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 
 	authorCollector := colly.NewCollector()
@@ -168,18 +184,8 @@ func main() {
 						}
 
 						log.Println("[INFO] writing", kbJSONURL)
-						f, err := os.Create(kbJSONURL)
-						if err != nil {
-							log.Println("[ERR] creating file at", kbJSONURL+":", err)
-							return
-						}
-						defer f.Close()
-
-						w := gzip.NewWriter(f)
-						defer w.Close()
-
-						if err := json.NewEncoder(w).Encode(doc); err != nil {
-							log.Println("[ERR] encoding json at", kbJSONURL+":", err)
+						if err := writeJSON(doc, kbJSONURL); err != nil {
+							log.Println("[ERR] writing doc to json for", kbTextURL+":", err)
 							return
 						}
 					}
