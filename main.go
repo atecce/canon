@@ -57,7 +57,7 @@ func fetch(wwwURL, kbURL string) error {
 	return nil
 }
 
-func readDoc(url string) (*document, error) {
+func extractDoc(url string) (*document, error) {
 
 	f, err := os.Open(url)
 	if err != nil {
@@ -160,18 +160,17 @@ func main() {
 					kbJSONURL := filepath.Join(author, name+".json.gz")
 					if _, err := os.Stat(kbJSONURL); os.IsNotExist(err) {
 
-						log.Println("[INFO]", kbJSONURL, "not on kbfs. extracting entities")
-
-						doc, err := readDoc(kbTextURL)
+						log.Println("[INFO]", kbJSONURL, "not on kbfs. extracting doc")
+						doc, err := extractDoc(kbTextURL)
 						if err != nil {
-							log.Println("[ERR] reading", kbTextURL, ":", err)
+							log.Println("[ERR] extracting doc for", kbTextURL+":", err)
 							return
 						}
 
-						log.Println("[INFO] create", kbJSONURL)
+						log.Println("[INFO] writing", kbJSONURL)
 						f, err := os.Create(kbJSONURL)
 						if err != nil {
-							log.Println("[ERR]", err)
+							log.Println("[ERR] creating file at", kbJSONURL+":", err)
 							return
 						}
 						defer f.Close()
@@ -179,9 +178,8 @@ func main() {
 						w := gzip.NewWriter(f)
 						defer w.Close()
 
-						log.Println("[INFO] encode", kbJSONURL)
 						if err := json.NewEncoder(w).Encode(doc); err != nil {
-							log.Println("[ERR]", err)
+							log.Println("[ERR] encoding json at", kbJSONURL+":", err)
 							return
 						}
 					}
