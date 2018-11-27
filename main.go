@@ -23,6 +23,16 @@ import (
 
 const domain = "https://www.gutenberg.org/"
 
+type document struct {
+	Text     string
+	Entities []entity
+}
+
+type entity struct {
+	Text, Label string
+	Count       uint
+}
+
 func fetch(wwwURL, kbURL string) error {
 
 	res, err := http.Get(wwwURL)
@@ -47,7 +57,7 @@ func fetch(wwwURL, kbURL string) error {
 	return nil
 }
 
-func readDoc(url string) (*prose.Document, error) {
+func readDoc(url string) (*document, error) {
 
 	f, err := os.Open(url)
 	if err != nil {
@@ -75,12 +85,32 @@ func readDoc(url string) (*prose.Document, error) {
 		corpus = corpus[:i]
 	}
 
-	doc, err := prose.NewDocument(string(text))
+	proseDoc, err := prose.NewDocument(string(text))
 	if err != nil {
 		return nil, err
 	}
 
-	return doc, nil
+	entities := make(map[prose.Entity]uint)
+	for _, ent := range proseDoc.Entities() {
+		if count, ok := entities[ent]; ok {
+			entities[ent] = count + 1
+		} else {
+			entities[ent] = 1
+		}
+	}
+
+	doc := document{
+		Text: proseDoc.Text,
+	}
+	for ent, count := range entities {
+		doc.Entities = append(doc.Entities, entity{
+			Text:  ent.Text,
+			Label: ent.Label,
+			Count: count,
+		})
+	}
+
+	return &doc, nil
 }
 
 func main() {
@@ -127,7 +157,7 @@ func main() {
 						}
 					}
 
-					kbJSONURL := filepath.Join(author, name+".entities.json.gz")
+					kbJSONURL := filepath.Join(author, name+".json.gz")
 					if _, err := os.Stat(kbJSONURL); os.IsNotExist(err) {
 
 						log.Println("[INFO]", kbJSONURL, "not on kbfs. extracting entities")
@@ -150,7 +180,7 @@ func main() {
 						defer w.Close()
 
 						log.Println("[INFO] encode", kbJSONURL)
-						if err := json.NewEncoder(w).Encode(doc.Entities()); err != nil {
+						if err := json.NewEncoder(w).Encode(doc); err != nil {
 							log.Println("[ERR]", err)
 							return
 						}
