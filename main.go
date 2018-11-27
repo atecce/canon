@@ -85,7 +85,7 @@ func extractDoc(url string) (*document, error) {
 		corpus = corpus[:i]
 	}
 
-	proseDoc, err := prose.NewDocument(string(text))
+	proseDoc, err := prose.NewDocument(corpus)
 	if err != nil {
 		return nil, err
 	}
