@@ -78,7 +78,7 @@ func main() {
 
 		// TODO pool of goroutines on a channel
 		var wg sync.WaitGroup
-		for _, node := range e.DOM.Next().Children().Nodes {
+		for i, node := range e.DOM.Next().Children().Nodes {
 			if node.FirstChild.FirstChild != nil {
 
 				wg.Add(1)
@@ -155,6 +155,10 @@ func main() {
 						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
+
+				if i != 0 && i % 10 == 0 {
+					wg.Wait()
+				}
 			}
 		}
 		wg.Wait()
