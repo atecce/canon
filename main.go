@@ -23,6 +23,30 @@ import (
 
 const domain = "https://www.gutenberg.org/"
 
+func fetch(wwwURL, kbURL string) error {
+
+	res, err := http.Get(wwwURL)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	f, err := os.Create(kbURL)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := gzip.NewWriter(f)
+	defer w.Close()
+
+	if _, err := io.Copy(w, res.Body); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func readDoc(url string) (*prose.Document, error) {
 
 	f, err := os.Open(url)
@@ -97,32 +121,9 @@ func main() {
 
 					kbTextURL := filepath.Join(author, name+".txt.gz")
 					if _, err := os.Stat(kbTextURL); os.IsNotExist(err) {
-
-						log.Println("[INFO]", kbTextURL, "not on kbfs. fetching")
-
-						log.Println("[INFO] get", wwwURL)
-						res, err := http.Get(wwwURL)
-						if err != nil {
-							log.Println("[ERR]", err)
-							return
-						}
-						defer res.Body.Close()
-
-						log.Println("[INFO] create", kbTextURL)
-						f, err := os.Create(kbTextURL)
-						if err != nil {
-							log.Println("[ERR]", err)
-							return
-						}
-						defer f.Close()
-
-						w := gzip.NewWriter(f)
-						defer w.Close()
-
-						log.Println("[INFO] copy", wwwURL, "to", kbTextURL)
-						if _, err := io.Copy(w, res.Body); err != nil {
-							log.Println("[ERR] copy", wwwURL, "to", kbTextURL, ":", err)
-							return
+						log.Println("[INFO]", kbTextURL, "not on kbfs. fetching from", wwwURL)
+						if err := fetch(wwwURL, kbTextURL); err != nil {
+							log.Println("[ERR] fetching:", err)
 						}
 					}
 
