@@ -87,7 +87,8 @@ func main() {
 				go func(href, title string) {
 					defer wg.Done()
 
-					name := strings.Replace(title, "/", "|", -1)
+					// strip forward slash and new lines
+					name := strings.Replace(strings.Replace(title, "/", "|", -1), "\n", "", -1)
 
 					wwwURL := domain + href + ".txt.utf-8"
 					if strings.Contains(wwwURL, "wikipedia") {
