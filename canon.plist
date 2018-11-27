@@ -6,13 +6,13 @@
 	<string>canon</string>
 
 	<key>Program</key>
-	<string>/Users/atecce/go/bin/canon</string>
+	<string>/Users/atec/go/bin/canon</string>
 
 	<key>StandardOutPath</key>
-	<string>/Users/atecce/Library/Logs/canon.log</string>
+	<string>/Users/atec/Library/Logs/canon.log</string>
 
 	<key>StandardErrorPath</key>
-	<string>/Users/atecce/Library/Logs/canon.log</string>
+	<string>/Users/atec/Library/Logs/canon.log</string>
 
 	<key>RunAtLoad</key>
 	<true/>
