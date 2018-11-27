@@ -17,11 +17,11 @@ import (
 	"github.com/yhat/scrape"
 
 	"github.com/gocolly/colly"
+
+	"github.com/atecce/canon/common"
 )
 
 const domain = "https://www.gutenberg.org/"
-
-var dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
 
 func readDoc(url string) (*prose.Document, error) {
 
@@ -69,7 +69,7 @@ func main() {
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
 
-		author := filepath.Join(dir, e.ChildText("a"))
+		author := filepath.Join(common.Dir, e.ChildText("a"))
 		if _, err := os.Stat(author); os.IsNotExist(err) {
 			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
 				log.Println("[ERR]", err)
@@ -88,7 +88,7 @@ func main() {
 					defer wg.Done()
 
 					// strip forward slash and new lines
-					name := strings.Replace(strings.Replace(title, "/", "|", -1), "\n", "", -1)
+					name := common.StripNewlines(strings.Replace(title, "/", "|", -1))
 
 					wwwURL := domain + href + ".txt.utf-8"
 					if strings.Contains(wwwURL, "wikipedia") {
@@ -156,7 +156,7 @@ func main() {
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
 
-				if i != 0 && i % 10 == 0 {
+				if i != 0 && i%10 == 0 {
 					wg.Wait()
 				}
 			}

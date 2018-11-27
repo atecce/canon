@@ -5,12 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/atecce/canon/common"
 )
 
 func main() {
-	filepath.Walk("/keybase/public/atec/data/gutenberg/", func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(common.Dir, func(path string, info os.FileInfo, err error) error {
 		if strings.Contains(path, "\n") {
-			newPath := strings.Replace(path, "\n", "", -1)
+			newPath := common.StripNewlines(path)
 			log.Println("[INFO] renaming", path, "to", newPath)
 			err := os.Rename(path, newPath)
 			if err != nil {
