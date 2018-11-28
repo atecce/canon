@@ -103,27 +103,27 @@ func main() {
 
 	// TODO pool of goroutines on a channel
 	var wg sync.WaitGroup
-	filepath.Walk(common.Dir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(common.Dir, func(textPath string, info os.FileInfo, err error) error {
 
 		// TODO try again on err?
 
-		if !strings.Contains(path, ".txt") {
+		if !strings.Contains(textPath, ".txt") {
 			return nil
 		}
 
-		JSONURL := strings.Replace(path, ".txt.", ".json.", -1)
-		if _, err := os.Stat(JSONURL); os.IsNotExist(err) {
+		jsonPath := strings.Replace(textPath, ".txt.", ".json.", -1)
+		if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
-			log.Println("[INFO]", JSONURL, "not on kbfs. extracting doc")
-			doc, err := newDoc(path)
+			log.Println("[INFO]", jsonPath, "not on kbfs. extracting doc")
+			doc, err := newDoc(textPath)
 			if err != nil {
-				log.Println("[ERR] extracting doc for", path+":", err)
+				log.Println("[ERR] extracting doc for", textPath+":", err)
 				return nil
 			}
 
-			log.Println("[INFO] writing", JSONURL)
-			if err := writeJSON(doc, JSONURL); err != nil {
-				log.Println("[ERR] writing doc to json for", path+":", err)
+			log.Println("[INFO] writing", jsonPath)
+			if err := writeJSON(doc, jsonPath); err != nil {
+				log.Println("[ERR] writing doc to json for", textPath+":", err)
 				return nil
 			}
 		}
