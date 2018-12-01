@@ -117,6 +117,9 @@ func main() {
 
 		go func(jsonPath string) {
 			defer wg.Done()
+			defer func() {
+				<-sem
+			}()
 
 			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
@@ -124,19 +127,15 @@ func main() {
 				doc, err := newDoc(textPath)
 				if err != nil {
 					log.Println("[ERR] extracting doc for", textPath+":", err)
-					<-sem
 					return
 				}
 
 				log.Println("[INFO] writing", jsonPath)
 				if err := writeJSON(doc, jsonPath); err != nil {
 					log.Println("[ERR] writing doc to json for", textPath+":", err)
-					<-sem
 					return
 				}
 			}
-
-			<-sem
 		}(strings.Replace(textPath, ".txt.", ".json.", -1))
 
 		return nil
