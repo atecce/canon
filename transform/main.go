@@ -122,14 +122,14 @@ func main() {
 
 			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
-				log(textPath, jsonPath, "INFO", "reading")
+				common.Log(textPath, jsonPath, "INFO", "reading")
 				doc, err := newDoc(textPath)
 				if err != nil {
 					common.Log(textPath, jsonPath, "ERR", "creating doc: "+err.Error())
 					return
 				}
 
-				log(textPath, jsonPath, "INFO", "writing")
+				common.Log(textPath, jsonPath, "INFO", "writing")
 				if err := writeJSON(doc, jsonPath); err != nil {
 					common.Log(textPath, jsonPath, "ERR", "writing: "+err.Error())
 					return
