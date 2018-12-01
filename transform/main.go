@@ -3,13 +3,11 @@ package main
 import (
 	"compress/gzip"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"gopkg.in/jdkato/prose.v2"
 
@@ -51,7 +49,7 @@ func newDoc(path string) (*document, error) {
 	corpus := string(text)
 	i := strings.Index(corpus, "End of the Project Gutenberg EBook")
 	if i == -1 {
-		log(path, "", "WARN", "no license at end")
+		common.Log(path, "", "WARN", "no license at end")
 	} else {
 		corpus = corpus[:i]
 	}
@@ -100,23 +98,6 @@ func writeJSON(doc *document, path string) error {
 	return nil
 }
 
-func log(in, out, level, msg string) {
-	b, _ := json.Marshal(struct {
-		Time  time.Time `json:"time"`
-		In    string    `json:"in"`
-		Out   string    `json:"out"`
-		Level string    `json:"level"`
-		Msg   string    `json:"msg"`
-	}{
-		time.Now(),
-		in,
-		out,
-		level,
-		msg,
-	})
-	fmt.Println(string(b))
-}
-
 func main() {
 
 	// TODO pool of goroutines on a channel
@@ -144,13 +125,13 @@ func main() {
 				log(textPath, jsonPath, "INFO", "reading")
 				doc, err := newDoc(textPath)
 				if err != nil {
-					log(textPath, jsonPath, "ERR", "creating doc: "+err.Error())
+					common.Log(textPath, jsonPath, "ERR", "creating doc: "+err.Error())
 					return
 				}
 
 				log(textPath, jsonPath, "INFO", "writing")
 				if err := writeJSON(doc, jsonPath); err != nil {
-					log(textPath, jsonPath, "ERR", "writing: "+err.Error())
+					common.Log(textPath, jsonPath, "ERR", "writing: "+err.Error())
 					return
 				}
 			}
