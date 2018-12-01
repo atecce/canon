@@ -141,10 +141,10 @@ func main() {
 
 			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
-				log(textPath, jsonPath, "INFO", "not on kbfs. extracting doc")
+				log(textPath, jsonPath, "INFO", "reading")
 				doc, err := newDoc(textPath)
 				if err != nil {
-					log(textPath, jsonPath, "ERR", "extracting doc: "+err.Error())
+					log(textPath, jsonPath, "ERR", "creating doc: "+err.Error())
 					return
 				}
 
