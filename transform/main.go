@@ -49,7 +49,7 @@ func newDoc(path string) (*document, error) {
 	corpus := string(text)
 	i := strings.Index(corpus, "End of the Project Gutenberg EBook")
 	if i == -1 {
-		common.Log(path, "", "WARN", "no license at end")
+		common.Log(int64(len(corpus)), path, "", "WARN", "no license at end")
 	} else {
 		corpus = corpus[:i]
 	}
@@ -122,16 +122,18 @@ func main() {
 
 			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
-				common.Log(textPath, jsonPath, "INFO", "reading")
+				size := info.Size()
+
+				common.Log(size, textPath, jsonPath, "INFO", "reading")
 				doc, err := newDoc(textPath)
 				if err != nil {
-					common.Log(textPath, jsonPath, "ERR", "creating doc: "+err.Error())
+					common.Log(size, textPath, jsonPath, "ERR", "creating doc: "+err.Error())
 					return
 				}
 
-				common.Log(textPath, jsonPath, "INFO", "writing")
+				common.Log(size, textPath, jsonPath, "INFO", "writing")
 				if err := writeJSON(doc, jsonPath); err != nil {
-					common.Log(textPath, jsonPath, "ERR", "writing: "+err.Error())
+					common.Log(size, textPath, jsonPath, "ERR", "writing: "+err.Error())
 					return
 				}
 			}
