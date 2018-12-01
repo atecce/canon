@@ -3,12 +3,13 @@ package main
 import (
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"gopkg.in/jdkato/prose.v2"
 
@@ -27,9 +28,9 @@ type entity struct {
 	Count       uint
 }
 
-func newDoc(url string) (*document, error) {
+func newDoc(path string) (*document, error) {
 
-	f, err := os.Open(url)
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func newDoc(url string) (*document, error) {
 	corpus := string(text)
 	i := strings.Index(corpus, "End of the Project Gutenberg EBook")
 	if i == -1 {
-		log.Println("[WARN] no license at end of", url)
+		log(path, "", "WARN", "no license at end")
 	} else {
 		corpus = corpus[:i]
 	}
@@ -99,6 +100,23 @@ func writeJSON(doc *document, path string) error {
 	return nil
 }
 
+func log(in, out, level, msg string) {
+	b, _ := json.Marshal(struct {
+		Time  time.Time `json:"time"`
+		In    string    `json:"in"`
+		Out   string    `json:"out"`
+		Level string    `json:"level"`
+		Msg   string    `json:"msg"`
+	}{
+		time.Now(),
+		in,
+		out,
+		level,
+		msg,
+	})
+	fmt.Println(string(b))
+}
+
 func main() {
 
 	// TODO pool of goroutines on a channel
@@ -123,16 +141,16 @@ func main() {
 
 			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
-				log.Println("[INFO]", jsonPath, "not on kbfs. extracting doc")
+				log(textPath, jsonPath, "INFO", "not on kbfs. extracting doc")
 				doc, err := newDoc(textPath)
 				if err != nil {
-					log.Println("[ERR] extracting doc for", textPath+":", err)
+					log(textPath, jsonPath, "ERR", "extracting doc: "+err.Error())
 					return
 				}
 
-				log.Println("[INFO] writing", jsonPath)
+				log(textPath, jsonPath, "INFO", "writing")
 				if err := writeJSON(doc, jsonPath); err != nil {
-					log.Println("[ERR] writing doc to json for", textPath+":", err)
+					log(textPath, jsonPath, "ERR", "writing: "+err.Error())
 					return
 				}
 			}
