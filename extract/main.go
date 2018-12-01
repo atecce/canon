@@ -19,16 +19,6 @@ import (
 
 const domain = "https://www.gutenberg.org/"
 
-type document struct {
-	Text     string
-	Entities []entity
-}
-
-type entity struct {
-	Text, Label string
-	Count       uint
-}
-
 func fetch(wwwURL, kbPath string) error {
 
 	res, err := http.Get(wwwURL)
