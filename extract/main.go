@@ -29,7 +29,7 @@ type entity struct {
 	Count       uint
 }
 
-func fetch(wwwURL, kbURL string) error {
+func fetch(wwwURL, kbPath string) error {
 
 	res, err := http.Get(wwwURL)
 	if err != nil {
@@ -37,7 +37,7 @@ func fetch(wwwURL, kbURL string) error {
 	}
 	defer res.Body.Close()
 
-	f, err := os.Create(kbURL)
+	f, err := os.Create(kbPath)
 	if err != nil {
 		return err
 	}
@@ -55,6 +55,10 @@ func fetch(wwwURL, kbURL string) error {
 
 func main() {
 
+	// TODO pool of goroutines on a channel
+	sem := make(chan struct{}, 10)
+	var wg sync.WaitGroup
+
 	authorCollector := colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
@@ -70,16 +74,18 @@ func main() {
 			}
 		}
 
-		// TODO pool of goroutines on a channel
-		var wg sync.WaitGroup
-		for i, node := range e.DOM.Next().Children().Nodes {
+		for _, node := range e.DOM.Next().Children().Nodes {
 			if node.FirstChild.FirstChild != nil {
 
 				wg.Add(1)
+				sem <- struct{}{}
 
 				// TODO try again on err?
 				go func(href, title string) {
 					defer wg.Done()
+					defer func() {
+						<-sem
+					}()
 
 					// strip forward slash and new lines
 					name := common.StripNewlines(strings.Replace(title, "/", "|", -1))
@@ -89,24 +95,21 @@ func main() {
 						return
 					}
 
-					kbURL := filepath.Join(author, name+".txt.gz")
-					if _, err := os.Stat(kbURL); os.IsNotExist(err) {
-						log.Println("[INFO]", kbURL, "not on kbfs. fetching from", wwwURL)
-						if err := fetch(wwwURL, kbURL); err != nil {
+					kbPath := filepath.Join(author, name+".txt.gz")
+					if _, err := os.Stat(kbPath); os.IsNotExist(err) {
+						log.Println("[INFO]", kbPath, "not on kbfs. fetching from", wwwURL)
+						if err := fetch(wwwURL, kbPath); err != nil {
 							log.Println("[ERR] fetching:", err)
 						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
-
-				if i != 0 && i%10 == 0 {
-					wg.Wait()
-				}
 			}
 		}
-		wg.Wait()
 	})
 
 	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
 		authorCollector.Visit(domain + "browse/authors/" + string(letter))
 	}
+
+	wg.Wait()
 }
