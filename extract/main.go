@@ -3,7 +3,6 @@ package main
 import (
 	"compress/gzip"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -52,7 +51,7 @@ func main() {
 	authorCollector := colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
-		log.Println("[INFO] get", r.URL)
+		common.Log(0, r.URL.Path, "", "INFO", r.Method)
 	})
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
@@ -60,7 +59,7 @@ func main() {
 		author := filepath.Join(common.Dir, e.ChildText("a"))
 		if _, err := os.Stat(author); os.IsNotExist(err) {
 			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
-				log.Println("[ERR]", err)
+				common.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
 			}
 		}
 
@@ -87,9 +86,9 @@ func main() {
 
 					kbPath := filepath.Join(author, name+".txt.gz")
 					if _, err := os.Stat(kbPath); os.IsNotExist(err) {
-						log.Println("[INFO]", kbPath, "not on kbfs. fetching from", wwwURL)
+						common.Log(0, wwwURL, kbPath, "INFO", "not on kbfs. fetching")
 						if err := fetch(wwwURL, kbPath); err != nil {
-							log.Println("[ERR] fetching:", err)
+							common.Log(0, wwwURL, kbPath, "ERR", "fetching: "+err.Error())
 						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
