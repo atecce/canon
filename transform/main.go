@@ -83,8 +83,8 @@ func newDoc(url string) (*document, error) {
 	return &doc, nil
 }
 
-func writeJSON(doc *document, url string) error {
-	f, err := os.Create(url)
+func writeJSON(doc *document, path string) error {
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
@@ -102,6 +102,7 @@ func writeJSON(doc *document, url string) error {
 func main() {
 
 	// TODO pool of goroutines on a channel
+	sem := make(chan struct{}, 10)
 	var wg sync.WaitGroup
 	filepath.Walk(common.Dir, func(textPath string, info os.FileInfo, err error) error {
 
@@ -111,22 +112,33 @@ func main() {
 			return nil
 		}
 
-		jsonPath := strings.Replace(textPath, ".txt.", ".json.", -1)
-		if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
+		wg.Add(1)
+		sem <- struct{}{}
 
-			log.Println("[INFO]", jsonPath, "not on kbfs. extracting doc")
-			doc, err := newDoc(textPath)
-			if err != nil {
-				log.Println("[ERR] extracting doc for", textPath+":", err)
-				return nil
+		go func(jsonPath string) {
+			defer wg.Done()
+
+			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
+
+				log.Println("[INFO]", jsonPath, "not on kbfs. extracting doc")
+				doc, err := newDoc(textPath)
+				if err != nil {
+					log.Println("[ERR] extracting doc for", textPath+":", err)
+					<-sem
+					return
+				}
+
+				log.Println("[INFO] writing", jsonPath)
+				if err := writeJSON(doc, jsonPath); err != nil {
+					log.Println("[ERR] writing doc to json for", textPath+":", err)
+					<-sem
+					return
+				}
 			}
 
-			log.Println("[INFO] writing", jsonPath)
-			if err := writeJSON(doc, jsonPath); err != nil {
-				log.Println("[ERR] writing doc to json for", textPath+":", err)
-				return nil
-			}
-		}
+			<-sem
+		}(strings.Replace(textPath, ".txt.", ".json.", -1))
+
 		return nil
 	})
 	wg.Wait()
