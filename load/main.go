@@ -91,6 +91,10 @@ func main() {
 					return
 				}
 				defer res.Body.Close()
+				log.Println("[INFO]", res.Status)
+				if res.StatusCode != http.StatusOK {
+					return
+				}
 
 				b, err := ioutil.ReadAll(res.Body)
 				if err != nil {
