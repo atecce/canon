@@ -9,13 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/atecce/canon/common"
 )
-
-type author struct {
-	Titles []string `json:"titles"`
-}
 
 func removeInvalidChars(str string) string {
 	ret := str
@@ -26,56 +23,70 @@ func removeInvalidChars(str string) string {
 }
 
 func main() {
+
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, 10)
+
 	filepath.Walk(common.Dir, func(path string, info os.FileInfo, err error) error {
 
 		// TODO try again on err?
 
 		if strings.Contains(path, ".json.") {
 
-			author := strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path))))
-			title := removeInvalidChars(strings.Split(info.Name(), ".")[0])
+			wg.Add(1)
+			sem <- struct{}{}
 
-			u := url.URL{
-				Scheme: "http",
-				Host:   "35.243.128.27",
-				Path:   filepath.Join(author, "title", title),
-			}
+			go func(author, title string) {
 
-			f, err := os.Open(path)
-			if err != nil {
-				log.Println("[ERR]", err)
-				return nil
-			}
-			defer f.Close()
+				defer func() {
+					wg.Done()
+					<-sem
+				}()
 
-			r, err := gzip.NewReader(f)
-			if err != nil {
-				log.Println("[ERR]", err)
-				return nil
-			}
-			defer r.Close()
+				u := url.URL{
+					Scheme: "http",
+					Host:   "canon.atec.pub",
+					Path:   filepath.Join(author, "title", title),
+				}
 
-			log.Println("[INFO]", u.String())
-			req, err := http.NewRequest("PUT", u.String(), r)
-			if err != nil {
-				log.Println("[ERR]", err)
-				return nil
-			}
-			req.Header.Add("Content-Type", "application/json")
+				f, err := os.Open(path)
+				if err != nil {
+					log.Println("[ERR]", err)
+					return
+				}
+				defer f.Close()
 
-			res, err := http.DefaultClient.Do(req)
-			if err != nil {
-				log.Println("[ERR]", err)
-				return nil
-			}
-			defer res.Body.Close()
+				r, err := gzip.NewReader(f)
+				if err != nil {
+					log.Println("[ERR]", err)
+					return
+				}
+				defer r.Close()
 
-			b, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				log.Println("[ERR]", err)
-				return nil
-			}
-			log.Println("[INFO]", string(b))
+				log.Println("[INFO]", u.String())
+				req, err := http.NewRequest("PUT", u.String(), r)
+				if err != nil {
+					log.Println("[ERR]", err)
+					return
+				}
+				req.Header.Add("Content-Type", "application/json")
+
+				res, err := http.DefaultClient.Do(req)
+				if err != nil {
+					log.Println("[ERR]", err)
+					return
+				}
+				defer res.Body.Close()
+
+				b, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					log.Println("[ERR]", err)
+					return
+				}
+				log.Println("[INFO]", string(b))
+
+			}(strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path)))), removeInvalidChars(strings.Split(info.Name(), ".")[0]))
+
 		}
 		return nil
 	})
