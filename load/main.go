@@ -3,6 +3,7 @@ package main
 import (
 	"compress/gzip"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -27,27 +28,49 @@ func removeInvalidChars(str string) string {
 func main() {
 	filepath.Walk(common.Dir, func(path string, info os.FileInfo, err error) error {
 
+		// TODO try again on err?
+
 		if strings.Contains(path, ".json.") {
 			u := url.URL{
 				Scheme: "http",
 				Host:   "35.243.128.27",
 				Path:   filepath.Join(strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path)))), "title", removeInvalidChars(strings.Split(info.Name(), ".")[0])),
 			}
-			f, _ := os.Open(path)
+			f, err := os.Open(path)
+			if err != nil {
+				log.Println("[ERR]", err)
+				return nil
+			}
 			defer f.Close()
-			r, _ := gzip.NewReader(f)
+
+			r, err := gzip.NewReader(f)
+			if err != nil {
+				log.Println("[ERR]", err)
+				return nil
+			}
 			defer r.Close()
-			println("[INFO]", u.String())
-			req, _ := http.NewRequest("PUT", u.String(), r)
+
+			log.Println("[INFO]", u.String())
+			req, err := http.NewRequest("PUT", u.String(), r)
+			if err != nil {
+				log.Println("[ERR]", err)
+				return nil
+			}
 			req.Header.Add("Content-Type", "application/json")
+
 			res, err := http.DefaultClient.Do(req)
 			if err != nil {
-				// TODO try again?
+				log.Println("[ERR]", err)
 				return nil
 			}
 			defer res.Body.Close()
-			b, _ := ioutil.ReadAll(res.Body)
-			println(string(b))
+
+			b, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Println("[ERR]", err)
+				return nil
+			}
+			log.Println("[INFO]", string(b))
 		}
 		return nil
 	})
