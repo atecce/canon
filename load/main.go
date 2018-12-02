@@ -26,15 +26,8 @@ func main() {
 
 	res, _ := http.Get("http://canon.atec.pub/_aliases")
 	b, _ := ioutil.ReadAll(res.Body)
-	var aliases map[string]interface{}
-	json.Unmarshal(b, &aliases)
-
-	var last string
-	for author := range aliases {
-		if author > last {
-			last = author
-		}
-	}
+	var authors map[string]interface{}
+	json.Unmarshal(b, &authors)
 
 	sem := make(chan struct{}, 10)
 
@@ -45,7 +38,9 @@ func main() {
 		if strings.Contains(path, ".json.") {
 
 			author := strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path))))
-			if author < last {
+			// TODO check per title and not just per author
+			if _, done := authors[author]; done {
+				log.Println("[INFO] author", author, "already", http.MethodPut)
 				return nil
 			}
 
@@ -77,8 +72,8 @@ func main() {
 				}
 				defer r.Close()
 
-				log.Println("[INFO]", u.String())
-				req, err := http.NewRequest("PUT", u.String(), r)
+				log.Println("[INFO]", http.MethodPut, u.String())
+				req, err := http.NewRequest(http.MethodPut, u.String(), r)
 				if err != nil {
 					log.Println("[ERR]", err)
 					return
