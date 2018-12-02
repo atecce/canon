@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/atecce/canon/common"
 )
@@ -37,7 +36,6 @@ func main() {
 		}
 	}
 
-	var wg sync.WaitGroup
 	sem := make(chan struct{}, 10)
 
 	filepath.Walk(common.Dir, func(path string, info os.FileInfo, err error) error {
@@ -51,13 +49,11 @@ func main() {
 				return nil
 			}
 
-			wg.Add(1)
 			sem <- struct{}{}
 
 			go func(author, title string) {
 
 				defer func() {
-					wg.Done()
 					<-sem
 				}()
 
