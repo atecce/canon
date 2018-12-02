@@ -71,8 +71,8 @@ func main() {
 
 				// TODO try again on err?
 				go func(href, title string) {
-					defer wg.Done()
 					defer func() {
+						wg.Done()
 						<-sem
 					}()
 
@@ -85,6 +85,7 @@ func main() {
 					}
 
 					kbPath := filepath.Join(author, name+".txt.gz")
+					common.Log(0, wwwURL, kbPath, "INFO", "checking for kbPath")
 					if _, err := os.Stat(kbPath); os.IsNotExist(err) {
 						common.Log(0, wwwURL, kbPath, "INFO", "not on kbfs. fetching")
 						if err := fetch(wwwURL, kbPath); err != nil {

@@ -106,6 +106,11 @@ func main() {
 	filepath.Walk(common.Dir, func(textPath string, info os.FileInfo, err error) error {
 
 		// TODO try again on err?
+		common.Log(0, textPath, "", "INFO", "walking")
+		if err != nil {
+			common.Log(0, textPath, "", "ERR", "walking")
+			return nil
+		}
 
 		if !strings.Contains(textPath, ".txt") {
 			return nil
@@ -115,11 +120,12 @@ func main() {
 		sem <- struct{}{}
 
 		go func(jsonPath string) {
-			defer wg.Done()
 			defer func() {
+				wg.Done()
 				<-sem
 			}()
 
+			common.Log(0, textPath, jsonPath, "INFO", "checking kbfs")
 			if _, err := os.Stat(jsonPath); os.IsNotExist(err) {
 
 				size := info.Size()
