@@ -2,6 +2,7 @@ package main
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +25,18 @@ func removeInvalidChars(str string) string {
 
 func main() {
 
+	res, _ := http.Get("http://canon.atec.pub/_aliases")
+	b, _ := ioutil.ReadAll(res.Body)
+	var aliases map[string]interface{}
+	json.Unmarshal(b, &aliases)
+
+	var last string
+	for author := range aliases {
+		if author > last {
+			last = author
+		}
+	}
+
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 10)
 
@@ -32,6 +45,11 @@ func main() {
 		// TODO try again on err?
 
 		if strings.Contains(path, ".json.") {
+
+			author := strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path))))
+			if author < last {
+				return nil
+			}
 
 			wg.Add(1)
 			sem <- struct{}{}
@@ -85,7 +103,7 @@ func main() {
 				}
 				log.Println("[INFO]", string(b))
 
-			}(strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path)))), removeInvalidChars(strings.Split(info.Name(), ".")[0]))
+			}(author, removeInvalidChars(strings.Split(info.Name(), ".")[0]))
 
 		}
 		return nil
