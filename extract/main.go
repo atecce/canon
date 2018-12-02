@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/yhat/scrape"
 
@@ -46,7 +45,6 @@ func main() {
 
 	// TODO pool of goroutines on a channel
 	sem := make(chan struct{}, 10)
-	var wg sync.WaitGroup
 
 	authorCollector := colly.NewCollector()
 
@@ -66,13 +64,11 @@ func main() {
 		for _, node := range e.DOM.Next().Children().Nodes {
 			if node.FirstChild.FirstChild != nil {
 
-				wg.Add(1)
 				sem <- struct{}{}
 
 				// TODO try again on err?
 				go func(href, title string) {
 					defer func() {
-						wg.Done()
 						<-sem
 					}()
 
@@ -100,6 +96,4 @@ func main() {
 	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
 		authorCollector.Visit(domain + "browse/authors/" + string(letter))
 	}
-
-	wg.Wait()
 }

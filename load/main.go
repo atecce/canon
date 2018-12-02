@@ -92,7 +92,7 @@ func main() {
 				}
 				defer res.Body.Close()
 				log.Println("[INFO]", res.Status)
-				if res.StatusCode != http.StatusOK {
+				if res.StatusCode != http.StatusCreated {
 					return
 				}
 
