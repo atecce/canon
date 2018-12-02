@@ -15,7 +15,7 @@ func RemoveNewlines(str string) string {
 	return strings.Replace(str, "\n", "", -1)
 }
 
-// Log writes json to stdout
+// Log writes json to stderr
 func Log(size int64, in, out, level, msg string) {
 	b, _ := json.Marshal(struct {
 		Time  time.Time `json:"time"`
