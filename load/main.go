@@ -31,11 +31,16 @@ func main() {
 		// TODO try again on err?
 
 		if strings.Contains(path, ".json.") {
+
+			author := strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path))))
+			title := removeInvalidChars(strings.Split(info.Name(), ".")[0])
+
 			u := url.URL{
 				Scheme: "http",
 				Host:   "35.243.128.27",
-				Path:   filepath.Join(strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path)))), "title", removeInvalidChars(strings.Split(info.Name(), ".")[0])),
+				Path:   filepath.Join(author, "title", title),
 			}
+
 			f, err := os.Open(path)
 			if err != nil {
 				log.Println("[ERR]", err)
