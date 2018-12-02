@@ -76,8 +76,8 @@ func main() {
 						<-sem
 					}()
 
-					// strip forward slash and new lines
-					name := common.StripNewlines(strings.Replace(title, "/", "|", -1))
+					// remove forward slash and new lines
+					name := common.RemoveNewlines(strings.Replace(title, "/", "|", -1))
 
 					wwwURL := domain + href + ".txt.utf-8"
 					if strings.Contains(wwwURL, "wikipedia") {

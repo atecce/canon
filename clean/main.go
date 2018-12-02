@@ -12,7 +12,7 @@ import (
 func main() {
 	filepath.Walk(common.Dir, func(path string, info os.FileInfo, err error) error {
 		if strings.Contains(path, "\n") {
-			newPath := common.StripNewlines(path)
+			newPath := common.RemoveNewlines(path)
 			log.Println("[INFO] renaming", path, "to", newPath)
 			err := os.Rename(path, newPath)
 			if err != nil {
