@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -65,20 +64,14 @@ func main() {
 				}
 				defer f.Close()
 
-				r, err := gzip.NewReader(f)
-				if err != nil {
-					log.Println("[ERR]", err)
-					return
-				}
-				defer r.Close()
-
 				log.Println("[INFO]", http.MethodPut, u.String())
-				req, err := http.NewRequest(http.MethodPut, u.String(), r)
+				req, err := http.NewRequest(http.MethodPut, u.String(), f)
 				if err != nil {
 					log.Println("[ERR]", err)
 					return
 				}
 				req.Header.Add("Content-Type", "application/json")
+				req.Header.Add("Content-Encoding", "gzip")
 
 				res, err := http.DefaultClient.Do(req)
 				if err != nil {
@@ -86,6 +79,7 @@ func main() {
 					return
 				}
 				defer res.Body.Close()
+
 				log.Println("[INFO]", res.Status)
 				if res.StatusCode != http.StatusCreated {
 					return
