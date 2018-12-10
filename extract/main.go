@@ -12,7 +12,7 @@ import (
 
 	"github.com/gocolly/colly"
 
-	"github.com/atecce/canon/common"
+	"github.com/atecce/canon/lib"
 )
 
 const domain = "https://www.gutenberg.org/"
@@ -49,15 +49,15 @@ func main() {
 	authorCollector := colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
-		common.Log(0, r.URL.Path, "", "INFO", r.Method)
+		lib.Log(0, r.URL.Path, "", "INFO", r.Method)
 	})
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
 
-		author := filepath.Join(common.Dir, e.ChildText("a"))
+		author := filepath.Join(lib.Dir, e.ChildText("a"))
 		if _, err := os.Stat(author); os.IsNotExist(err) {
 			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
-				common.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
+				lib.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
 			}
 		}
 
@@ -73,7 +73,7 @@ func main() {
 					}()
 
 					// remove forward slash and new lines
-					name := common.RemoveNewlines(strings.Replace(title, "/", "|", -1))
+					name := strings.Replace(lib.RemoveNewlines(strings.Replace(title, "/", "|", -1)), "¶", "", -1)
 
 					wwwURL := domain + href + ".txt.utf-8"
 					if strings.Contains(wwwURL, "wikipedia") {
@@ -81,11 +81,11 @@ func main() {
 					}
 
 					kbPath := filepath.Join(author, name+".txt.gz")
-					common.Log(0, wwwURL, kbPath, "INFO", "checking for kbPath")
+					lib.Log(0, wwwURL, kbPath, "INFO", "checking for kbPath")
 					if _, err := os.Stat(kbPath); os.IsNotExist(err) {
-						common.Log(0, wwwURL, kbPath, "INFO", "not on kbfs. fetching")
+						lib.Log(0, wwwURL, kbPath, "INFO", "not on kbfs. fetching")
 						if err := fetch(wwwURL, kbPath); err != nil {
-							common.Log(0, wwwURL, kbPath, "ERR", "fetching: "+err.Error())
+							lib.Log(0, wwwURL, kbPath, "ERR", "fetching: "+err.Error())
 						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
