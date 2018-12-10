@@ -13,7 +13,7 @@ import (
 
 const domain = "https://www.gutenberg.org/"
 
-func writeJSON(doc *lib.Document, path string) error {
+func writeJSON(doc *lib.Doc, path string) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func main() {
 				size := info.Size()
 
 				lib.Log(size, textPath, jsonPath, "INFO", "reading")
-				doc, err := lib.NewDocument(textPath)
+				doc, err := lib.NewDoc(textPath)
 				if err != nil {
 					lib.Log(size, textPath, jsonPath, "ERR", "creating doc: "+err.Error())
 					return

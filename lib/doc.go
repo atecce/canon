@@ -9,7 +9,7 @@ import (
 	prose "gopkg.in/jdkato/prose.v2"
 )
 
-type Document struct {
+type Doc struct {
 	Text     string
 	Entities []Entity
 }
@@ -19,7 +19,7 @@ type Entity struct {
 	Count       uint
 }
 
-func NewDocument(path string) (*Document, error) {
+func NewDoc(path string) (*Doc, error) {
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -61,7 +61,7 @@ func NewDocument(path string) (*Document, error) {
 		}
 	}
 
-	doc := Document{
+	doc := Doc{
 		Text: proseDoc.Text,
 	}
 	for ent, count := range entities {

@@ -28,7 +28,7 @@ var docCmd = &cobra.Command{
 	Use: "doc",
 	Run: func(cmd *cobra.Command, args []string) {
 		path := filepath.Join(lib.Dir, args[0])
-		doc, _ := lib.NewDocument(path)
+		doc, _ := lib.NewDoc(path)
 		json.NewEncoder(os.Stdout).Encode(&doc)
 	},
 }
