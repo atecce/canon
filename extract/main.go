@@ -54,7 +54,9 @@ func main() {
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
 
-		author := filepath.Join(lib.Dir, e.ChildText("a"))
+		// remove pilcrows from author name
+		author := filepath.Join(lib.Dir, strings.Replace(e.ChildText("a"), "¶", "", -1))
+
 		if _, err := os.Stat(author); os.IsNotExist(err) {
 			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
 				lib.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
@@ -72,8 +74,8 @@ func main() {
 						<-sem
 					}()
 
-					// remove forward slash and new lines
-					name := strings.Replace(lib.RemoveNewlines(strings.Replace(title, "/", "|", -1)), "¶", "", -1)
+					// remove forward slashes and new lines
+					name := lib.RemoveNewlines(strings.Replace(title, "/", "|", -1))
 
 					wwwURL := domain + href + ".txt.utf-8"
 					if strings.Contains(wwwURL, "wikipedia") {
