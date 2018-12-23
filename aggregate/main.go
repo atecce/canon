@@ -6,12 +6,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/atecce/canon/lib"
 	"github.com/kr/pretty"
 	prose "gopkg.in/jdkato/prose.v2"
 )
+
+type Author struct {
+	FirstName *string
+	LastName  *string
+	Life      [2]*time.Time
+	Entities  []lib.Entity
+}
 
 func main() {
 
@@ -32,11 +41,12 @@ func main() {
 		// new author
 		if info.IsDir() && name != currentDir {
 
+			var docEntities []lib.Entity
+
 			// print out accumulated entities
 			if currentEntities != nil {
 				println()
 
-				var docEntities []lib.Entity
 				for ent, count := range currentEntities {
 					docEntities = append(docEntities, lib.Entity{
 						Label: ent.Label,
@@ -44,8 +54,6 @@ func main() {
 						Count: count,
 					})
 				}
-
-				pretty.Println(docEntities)
 			}
 
 			// reset author
@@ -58,10 +66,24 @@ func main() {
 			println()
 
 			if len(tmp) == 3 {
-				println("last name:", tmp[0])
-				println("first name:", tmp[1])
 
-				println("life:", tmp[2])
+				life := strings.Split(tmp[2], "-")
+
+				birthYear, _ := strconv.Atoi(life[0])
+				deathYear, _ := strconv.Atoi(life[1])
+
+				birth := time.Date(birthYear, time.January, 0, 0, 0, 0, 0, time.UTC)
+				death := time.Date(deathYear, time.January, 0, 0, 0, 0, 0, time.UTC)
+
+				author := Author{
+					FirstName: &tmp[1],
+					LastName:  &tmp[0],
+					Life:      [2]*time.Time{&birth, &death},
+					Entities:  docEntities,
+				}
+
+				pretty.Println(author)
+
 			} else {
 				pretty.Println("TODO", tmp)
 			}
