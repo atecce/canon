@@ -11,8 +11,6 @@ import (
 	"github.com/atecce/canon/lib"
 )
 
-const domain = "https://www.gutenberg.org/"
-
 func writeJSON(doc *lib.Doc, path string) error {
 	f, err := os.Create(path)
 	if err != nil {
