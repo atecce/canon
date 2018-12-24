@@ -8,16 +8,19 @@ import (
 	prose "gopkg.in/jdkato/prose.v2"
 )
 
+// Doc represents a document with named entities extracted
 type Doc struct {
 	Text     string
 	Entities []Entity
 }
 
+// Entity contains the text and label along with the amount of occurences
 type Entity struct {
 	Text, Label string
 	Count       uint
 }
 
+// NewDoc constucts a Doc with a url from gutenberg.org
 func NewDoc(url string) (*Doc, error) {
 
 	res, err := http.Get(url)
