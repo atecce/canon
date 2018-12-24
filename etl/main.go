@@ -3,8 +3,10 @@ package main
 import (
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/yhat/scrape"
@@ -34,8 +36,14 @@ func writeJSON(doc *lib.Doc, path string) error {
 
 func main() {
 
-	// TODO make configurable
-	sem := make(chan struct{}, 16)
+	workers, err := strconv.Atoi(os.Getenv("WORKERS"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to read in worker configuration: %v\n", err)
+		fmt.Fprintln(os.Stderr, "defaulting to 16")
+		workers = 16
+	}
+
+	sem := make(chan struct{}, workers)
 
 	authorCollector := colly.NewCollector()
 
