@@ -5,29 +5,50 @@ provider "google" {
     zone = "us-east1-b"
 }
 
+resource "google_compute_firewall" "provisioner" {
 
+    name = "provisioner"
+    network = "default"
+    target_tags = ["provisioner"]
+
+    source_ranges = ["0.0.0.0/0"]
+    allow = {
+        protocol = "tcp"
+        ports = ["22"]
+    }
+}
+    
 resource "google_compute_instance" "default" {
 
-    name = "test"
-
+    name = "etl"
     zone = "us-east1-b"
+    tags = ["provisioner"]
 
+    network_interface = {
+        network = "default"
+        access_config = {}
+    }
     machine_type = "n1-standard-1"
-
-    boot_disk {
-        initialize_params {
+    boot_disk = {
+        initialize_params = {
             image = "debian-cloud/debian-9"
         }
     }
 
-    network_interface {
-        network = "default"
+    provisioner "remote-exec" {
+        connection = {
+            type = "ssh"
+            user = "atec"
+            private_key = "${file("~/.ssh/google_compute_engine")}"
+            timeout = "120s"
+        }
+        inline = [
+            "wget https://atec.keybase.pub/bin/canon/etl",
+            # TODO
+            # "chmod 755 etl",
+            # "./etl 2>etl.log &"
+        ]
     }
 
-    # TODO
-    # provisioner "remote-exec" {
-    #     inline = [
-    #         "wget https://atec.keybase.pub/bin/canon/etl > /usr/local/bin/etl"
-    #     ]
-    # }
+    depends_on = ["google_compute_firewall.provisioner"]
 }

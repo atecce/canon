@@ -1,1 +1,0 @@
-gcloud compute instances create etl --machine-type n1-highmem-64
