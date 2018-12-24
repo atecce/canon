@@ -1,9 +1,8 @@
 package lib
 
 import (
-	"compress/gzip"
 	"io/ioutil"
-	"os"
+	"net/http"
 	"strings"
 
 	prose "gopkg.in/jdkato/prose.v2"
@@ -19,21 +18,15 @@ type Entity struct {
 	Count       uint
 }
 
-func NewDoc(path string) (*Doc, error) {
+func NewDoc(url string) (*Doc, error) {
 
-	f, err := os.Open(path)
+	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer res.Body.Close()
 
-	r, err := gzip.NewReader(f)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-
-	text, err := ioutil.ReadAll(r)
+	text, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +35,7 @@ func NewDoc(path string) (*Doc, error) {
 	corpus := string(text)
 	i := strings.Index(corpus, "End of the Project Gutenberg EBook")
 	if i == -1 {
-		Log(int64(len(corpus)), path, "", "WARN", "no license at end")
+		Log(int64(len(corpus)), url, "", "WARN", "no license at end")
 	} else {
 		corpus = corpus[:i]
 	}

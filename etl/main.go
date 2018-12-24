@@ -1,0 +1,100 @@
+package main
+
+import (
+	"compress/gzip"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/yhat/scrape"
+
+	"github.com/gocolly/colly"
+
+	"github.com/atecce/canon/lib"
+)
+
+const domain = "https://www.gutenberg.org/"
+
+func writeJSON(doc *lib.Doc, path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := gzip.NewWriter(f)
+	defer w.Close()
+
+	if err := json.NewEncoder(w).Encode(doc); err != nil {
+		return err
+	}
+	return nil
+}
+
+func main() {
+
+	// TODO make configurable
+	sem := make(chan struct{}, 16)
+
+	authorCollector := colly.NewCollector()
+
+	authorCollector.OnRequest(func(r *colly.Request) {
+		lib.Log(0, r.URL.Path, "", "INFO", r.Method)
+	})
+
+	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
+
+		// remove pilcrows from author name
+		author := filepath.Join("gutenberg", strings.Replace(e.ChildText("a"), "¶", "", -1))
+
+		if _, err := os.Stat(author); os.IsNotExist(err) {
+			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
+				lib.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
+			}
+		}
+
+		for _, node := range e.DOM.Next().Children().Nodes {
+			if node.FirstChild.FirstChild != nil {
+
+				sem <- struct{}{}
+
+				// TODO try again on err?
+				go func(href, title string) {
+					defer func() {
+						<-sem
+					}()
+
+					// remove forward slashes and new lines
+					name := lib.RemoveNewlines(strings.Replace(title, "/", "|", -1))
+
+					url := domain + href + ".txt.utf-8"
+					if strings.Contains(url, "wikipedia") {
+						return
+					}
+
+					path := filepath.Join(author, name+".txt.gz")
+					lib.Log(0, url, path, "INFO", "checking for path")
+					if _, err := os.Stat(path); os.IsNotExist(err) {
+
+						lib.Log(0, url, path, "INFO", "not on fs. creating new doc")
+						doc, err := lib.NewDoc(url)
+						if err != nil {
+							lib.Log(0, url, path, "ERR", "creating new doc: "+err.Error())
+						}
+
+						lib.Log(0, url, path, "INFO", "writing")
+						if err := writeJSON(doc, path); err != nil {
+							lib.Log(0, url, path, "ERR", "writing: "+err.Error())
+							return
+						}
+					}
+				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
+			}
+		}
+	})
+
+	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
+		authorCollector.Visit(domain + "browse/authors/" + string(letter))
+	}
+}
