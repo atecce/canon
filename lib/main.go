@@ -16,17 +16,15 @@ func RemoveNewlines(str string) string {
 }
 
 // Log writes json to stderr
-func Log(size int64, in, out, level, msg string) {
+func Log(in, out, level, msg string) {
 	b, _ := json.Marshal(struct {
 		Time  time.Time `json:"time"`
-		Size  int64     `json:"size"`
 		In    string    `json:"in"`
 		Out   string    `json:"out"`
 		Level string    `json:"level"`
 		Msg   string    `json:"msg"`
 	}{
 		time.Now(),
-		size,
 		in,
 		out,
 		level,

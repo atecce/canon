@@ -48,7 +48,7 @@ func main() {
 	authorCollector := colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
-		lib.Log(0, r.URL.Path, "", "INFO", r.Method)
+		lib.Log(r.URL.Path, "", "INFO", r.Method)
 	})
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
@@ -58,7 +58,7 @@ func main() {
 
 		if _, err := os.Stat(author); os.IsNotExist(err) {
 			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
-				lib.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
+				lib.Log(author, "", "ERR", "failed to mkdir: "+err.Error())
 			}
 		}
 
@@ -81,19 +81,20 @@ func main() {
 						return
 					}
 
-					path := filepath.Join(author, name+".txt.gz")
-					lib.Log(0, url, path, "INFO", "checking for path")
-					if _, err := os.Stat(path); os.IsNotExist(err) {
+					textPath := filepath.Join(author, name+".txt.gz")
+					lib.Log(url, textPath, "INFO", "checking for path")
+					if _, err := os.Stat(textPath); os.IsNotExist(err) {
 
-						lib.Log(0, url, path, "INFO", "not on fs. creating new doc")
-						doc, err := lib.NewDoc(url)
+						lib.Log(url, textPath, "INFO", "not on fs. creating new doc")
+						doc, err := lib.NewDoc(url, textPath)
 						if err != nil {
-							lib.Log(0, url, path, "ERR", "creating new doc: "+err.Error())
+							lib.Log(url, textPath, "ERR", "creating new doc: "+err.Error())
 						}
 
-						lib.Log(0, url, path, "INFO", "writing")
-						if err := writeJSON(doc, path); err != nil {
-							lib.Log(0, url, path, "ERR", "writing: "+err.Error())
+						jsonPath := strings.Replace(textPath, ".txt.", ".json.", -1)
+						lib.Log(url, jsonPath, "INFO", "writing")
+						if err := writeJSON(doc, jsonPath); err != nil {
+							lib.Log(url, jsonPath, "ERR", "writing: "+err.Error())
 							return
 						}
 					}
