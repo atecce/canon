@@ -15,29 +15,53 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/atecce/canon/fetch"
 	"github.com/spf13/cobra"
 )
 
-// docCmd represents the doc command
-var docCmd = &cobra.Command{
-	Use: "doc",
+// fetchCmd represents the fetch command
+var fetchCmd = &cobra.Command{
+	Use:   "fetch",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// path := filepath.Join(lib.Dir, args[0])
-		// doc, _ := lib.NewDoc(path)
-		// json.NewEncoder(os.Stdout).Encode(&doc)
+
+		if len(args) != 1 {
+			println("usage: canon fetch [files | tarball]")
+			os.Exit(1)
+		}
+
+		switch args[0] {
+		case "files":
+			fetch.Files("gutenberg")
+			break
+		case "tarball":
+			fetch.Tarball("gutenberg.tar.gz")
+			break
+		default:
+			println("usage: canon fetch [files | tarball]")
+			os.Exit(1)
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(docCmd)
+	rootCmd.AddCommand(fetchCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// docCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// fetchCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// docCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// fetchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

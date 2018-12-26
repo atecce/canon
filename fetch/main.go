@@ -1,11 +1,10 @@
-package main
+package fetch
 
 import (
 	"archive/tar"
 	"compress/gzip"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -30,7 +29,8 @@ func init() {
 	})
 }
 
-func fetchFiles(root string) error {
+// Files hits https://gutenberg.org and writes the text into files in a directory
+func Files(root string) error {
 
 	sem := make(chan struct{}, 10)
 
@@ -114,7 +114,8 @@ func write(url, path string, tw *tar.Writer) error {
 	return nil
 }
 
-func fetchTarball(name string) error {
+// Tarball hits https://gutenberg.org and writes the text directly into a tarball
+func Tarball(name string) error {
 
 	f, _ := os.Create(name)
 	defer f.Close()
@@ -179,15 +180,4 @@ func fetchFile(url, path string) error {
 	}
 
 	return nil
-}
-
-func main() {
-
-	if err := fetchFiles("gutenberg"); err != nil {
-		log.Fatal(err)
-	}
-
-	// if err := fetchTarball("gutenberg.tar.gz"); err != nil {
-	// 	log.Fatal(err)
-	// }
 }
