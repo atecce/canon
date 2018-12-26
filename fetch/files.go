@@ -16,6 +16,12 @@ import (
 )
 
 // Files hits https://gutenberg.org and writes the text into files in a directory
+//
+// fetching files is fast because it's parallelizable and has a low memory
+// footprint because of the ability to simply pass res.Body to io.Copy. it
+// also isolates failure well between each file
+//
+// however, it can create a mess at the destination
 func Files(root string) error {
 
 	sem := make(chan struct{}, 10)

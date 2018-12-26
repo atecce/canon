@@ -15,6 +15,14 @@ import (
 )
 
 // Tarball hits https://gutenberg.org and writes the text directly into a tarball
+//
+// tarball produces a single clean artifact which is easily moved around with file
+// operations
+//
+// however, it is not parallelizable or resilient to failure. when it exits you will
+// mostly likely need to start it from scratch. in addition, because you need to
+// write file sizes in tar headers, it can create a considerable footprint counting
+// bytes in memory
 func Tarball(name string) error {
 
 	f, _ := os.Create(name)
