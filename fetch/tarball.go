@@ -3,6 +3,7 @@ package fetch
 import (
 	"archive/tar"
 	"compress/gzip"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -73,24 +74,44 @@ func write(url, path string, tw *tar.Writer) error {
 	}
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
+	if res.ContentLength == -1 {
 
-	size := int64(len(b))
+		b, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
 
-	if err := tw.WriteHeader(&tar.Header{
-		Name: path,
-		Size: size,
-		Mode: 0444,
-	}); err != nil {
-		return err
-	}
+		size := int64(len(b))
 
-	lib.Log(&size, url, path, "INFO", "writing")
-	if _, err := tw.Write(b); err != nil {
-		return err
+		if err := tw.WriteHeader(&tar.Header{
+			Name: path,
+			Size: size,
+			Mode: 0444,
+		}); err != nil {
+			return err
+		}
+
+		lib.Log(&size, url, path, "INFO", "writing")
+		if _, err := tw.Write(b); err != nil {
+			return err
+		}
+
+	} else {
+
+		size := res.ContentLength
+
+		if err := tw.WriteHeader(&tar.Header{
+			Name: path,
+			Size: size,
+			Mode: 0444,
+		}); err != nil {
+			return err
+		}
+
+		lib.Log(&size, url, path, "INFO", "writing")
+		if _, err := io.Copy(tw, res.Body); err != nil {
+			return err
+		}
 	}
 
 	return nil
