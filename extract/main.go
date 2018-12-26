@@ -20,15 +20,19 @@ import (
 
 const domain = "https://www.gutenberg.org/"
 
-func fetchFiles(root string) error {
+var authorCollector *colly.Collector
 
-	sem := make(chan struct{}, 10)
-
-	authorCollector := colly.NewCollector()
+func init() {
+	authorCollector = colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
 		lib.Log(nil, r.URL.Path, "", "INFO", r.Method)
 	})
+}
+
+func fetchFiles(root string) error {
+
+	sem := make(chan struct{}, 10)
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
 
@@ -64,7 +68,7 @@ func fetchFiles(root string) error {
 					lib.Log(nil, url, path, "INFO", "checking for kbPath")
 					if _, err := os.Stat(path); os.IsNotExist(err) {
 						lib.Log(nil, url, path, "INFO", "not on kbfs. fetching")
-						if err := fetch(url, path); err != nil {
+						if err := fetchFile(url, path); err != nil {
 							lib.Log(nil, url, path, "ERR", "fetching: "+err.Error())
 						}
 					}
@@ -121,12 +125,6 @@ func fetchTarball(name string) error {
 	tw := tar.NewWriter(gzw)
 	defer tw.Close()
 
-	authorCollector := colly.NewCollector()
-
-	authorCollector.OnRequest(func(r *colly.Request) {
-		lib.Log(nil, r.URL.Path, "", "INFO", r.Method)
-	})
-
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
 
 		// remove pilcrows from author name
@@ -159,7 +157,7 @@ func fetchTarball(name string) error {
 	return nil
 }
 
-func fetch(url, path string) error {
+func fetchFile(url, path string) error {
 
 	res, err := http.Get(url)
 	if err != nil {
@@ -185,11 +183,11 @@ func fetch(url, path string) error {
 
 func main() {
 
-	// if err := fetchFiles("gutenberg"); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	if err := fetchTarball("gutenberg.tar.gz"); err != nil {
+	if err := fetchFiles("gutenberg"); err != nil {
 		log.Fatal(err)
 	}
+
+	// if err := fetchTarball("gutenberg.tar.gz"); err != nil {
+	// 	log.Fatal(err)
+	// }
 }
