@@ -1,8 +1,10 @@
 package main
 
 import (
+	"archive/tar"
 	"compress/gzip"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +27,7 @@ func fetchFiles(root string) error {
 	authorCollector := colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
-		lib.Log(0, r.URL.Path, "", "INFO", r.Method)
+		lib.Log(nil, r.URL.Path, "", "INFO", r.Method)
 	})
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
@@ -35,7 +37,7 @@ func fetchFiles(root string) error {
 
 		if _, err := os.Stat(author); os.IsNotExist(err) {
 			if mkErr := os.Mkdir(author, 0700); mkErr != nil {
-				lib.Log(0, author, "", "ERR", "failed to mkdir: "+err.Error())
+				lib.Log(nil, author, "", "ERR", "failed to mkdir: "+err.Error())
 			}
 		}
 
@@ -53,17 +55,17 @@ func fetchFiles(root string) error {
 					// remove forward slashes and new lines
 					name := lib.RemoveNewlines(strings.Replace(title, "/", "|", -1))
 
-					wwwURL := domain + href + ".txt.utf-8"
-					if strings.Contains(wwwURL, "wikipedia") {
+					url := domain + href + ".txt.utf-8"
+					if strings.Contains(url, "wikipedia") {
 						return
 					}
 
-					kbPath := filepath.Join(author, name+".txt.gz")
-					lib.Log(0, wwwURL, kbPath, "INFO", "checking for kbPath")
-					if _, err := os.Stat(kbPath); os.IsNotExist(err) {
-						lib.Log(0, wwwURL, kbPath, "INFO", "not on kbfs. fetching")
-						if err := fetch(wwwURL, kbPath); err != nil {
-							lib.Log(0, wwwURL, kbPath, "ERR", "fetching: "+err.Error())
+					path := filepath.Join(author, name+".txt.gz")
+					lib.Log(nil, url, path, "INFO", "checking for kbPath")
+					if _, err := os.Stat(path); os.IsNotExist(err) {
+						lib.Log(nil, url, path, "INFO", "not on kbfs. fetching")
+						if err := fetch(url, path); err != nil {
+							lib.Log(nil, url, path, "ERR", "fetching: "+err.Error())
 						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
@@ -78,7 +80,82 @@ func fetchFiles(root string) error {
 	return nil
 }
 
-func fetchTarball(root string) error {
+func write(url, path string, tw *tar.Writer) error {
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	size := int64(len(b))
+
+	if err := tw.WriteHeader(&tar.Header{
+		Name: path,
+		Size: size,
+		Mode: 0444,
+	}); err != nil {
+		return err
+	}
+
+	lib.Log(&size, url, path, "INFO", "writing")
+	if _, err := tw.Write(b); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fetchTarball(name string) error {
+
+	f, _ := os.Create(name)
+	defer f.Close()
+
+	gzw := gzip.NewWriter(f)
+	defer gzw.Close()
+
+	tw := tar.NewWriter(gzw)
+	defer tw.Close()
+
+	authorCollector := colly.NewCollector()
+
+	authorCollector.OnRequest(func(r *colly.Request) {
+		lib.Log(nil, r.URL.Path, "", "INFO", r.Method)
+	})
+
+	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
+
+		// remove pilcrows from author name
+		author := strings.Replace(e.ChildText("a"), "¶", "", -1)
+
+		for _, node := range e.DOM.Next().Children().Nodes {
+			if node.FirstChild.FirstChild != nil {
+
+				// remove forward slashes and new lines
+				name := lib.RemoveNewlines(strings.Replace(node.FirstChild.FirstChild.Data, "/", "|", -1))
+
+				url := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
+				if strings.Contains(url, "wikipedia") {
+					return
+				}
+
+				path := filepath.Join(author, name+".txt")
+
+				if err := write(url, path, tw); err != nil {
+					lib.Log(nil, url, path, "ERR", "writing: "+err.Error())
+				}
+			}
+		}
+	})
+
+	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
+		authorCollector.Visit(domain + "browse/authors/" + string(letter))
+	}
+
 	return nil
 }
 
@@ -108,7 +185,11 @@ func fetch(url, path string) error {
 
 func main() {
 
-	if err := fetchFiles("gutenberg"); err != nil {
+	// if err := fetchFiles("gutenberg"); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	if err := fetchTarball("gutenberg.tar.gz"); err != nil {
 		log.Fatal(err)
 	}
 }
