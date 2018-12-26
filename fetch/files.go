@@ -1,10 +1,8 @@
 package fetch
 
 import (
-	"archive/tar"
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,18 +14,6 @@ import (
 
 	"github.com/atecce/canon/lib"
 )
-
-const domain = "https://www.gutenberg.org/"
-
-var authorCollector *colly.Collector
-
-func init() {
-	authorCollector = colly.NewCollector()
-
-	authorCollector.OnRequest(func(r *colly.Request) {
-		lib.Log(nil, r.URL.Path, "", "INFO", r.Method)
-	})
-}
 
 // Files hits https://gutenberg.org and writes the text into files in a directory
 func Files(root string) error {
@@ -73,80 +59,6 @@ func Files(root string) error {
 						}
 					}
 				}(scrape.Attr(node.FirstChild, "href"), node.FirstChild.FirstChild.Data)
-			}
-		}
-	})
-
-	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
-		authorCollector.Visit(domain + "browse/authors/" + string(letter))
-	}
-
-	return nil
-}
-
-func write(url, path string, tw *tar.Writer) error {
-	res, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	size := int64(len(b))
-
-	if err := tw.WriteHeader(&tar.Header{
-		Name: path,
-		Size: size,
-		Mode: 0444,
-	}); err != nil {
-		return err
-	}
-
-	lib.Log(&size, url, path, "INFO", "writing")
-	if _, err := tw.Write(b); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Tarball hits https://gutenberg.org and writes the text directly into a tarball
-func Tarball(name string) error {
-
-	f, _ := os.Create(name)
-	defer f.Close()
-
-	gzw := gzip.NewWriter(f)
-	defer gzw.Close()
-
-	tw := tar.NewWriter(gzw)
-	defer tw.Close()
-
-	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
-
-		// remove pilcrows from author name
-		author := strings.Replace(e.ChildText("a"), "¶", "", -1)
-
-		for _, node := range e.DOM.Next().Children().Nodes {
-			if node.FirstChild.FirstChild != nil {
-
-				// remove forward slashes and new lines
-				name := lib.RemoveNewlines(strings.Replace(node.FirstChild.FirstChild.Data, "/", "|", -1))
-
-				url := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
-				if strings.Contains(url, "wikipedia") {
-					return
-				}
-
-				path := filepath.Join(author, name+".txt")
-
-				if err := write(url, path, tw); err != nil {
-					lib.Log(nil, url, path, "ERR", "writing: "+err.Error())
-				}
 			}
 		}
 	})
