@@ -57,9 +57,9 @@ func Files(root string) error {
 					}
 
 					path := filepath.Join(author, name+".txt.gz")
-					lib.Log(nil, url, path, "INFO", "checking for kbPath")
+					lib.Log(nil, url, path, "INFO", "checking for path")
 					if _, err := os.Stat(path); os.IsNotExist(err) {
-						lib.Log(nil, url, path, "INFO", "not on kbfs. fetching")
+						lib.Log(nil, url, path, "INFO", "not on fs. fetching")
 						if err := fetchFile(url, path); err != nil {
 							lib.Log(nil, url, path, "ERR", "fetching: "+err.Error())
 						}
