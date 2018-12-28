@@ -1,8 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
-	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,22 +10,6 @@ import (
 )
 
 const domain = "https://www.gutenberg.org/"
-
-func writeJSON(doc *lib.Doc, path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	w := gzip.NewWriter(f)
-	defer w.Close()
-
-	if err := json.NewEncoder(w).Encode(doc); err != nil {
-		return err
-	}
-	return nil
-}
 
 func main() {
 
@@ -51,7 +33,7 @@ func main() {
 					log.Fatal(err)
 				}
 
-				if err := writeJSON(doc, jsonPath); err != nil {
+				if err := doc.WriteJSON(jsonPath); err != nil {
 					log.Fatal(err)
 				}
 

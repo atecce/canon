@@ -3,6 +3,7 @@ package lib
 import (
 	"bufio"
 	"compress/gzip"
+	"encoding/json"
 	"os"
 
 	"github.com/jdkato/prose/tokenize"
@@ -11,6 +12,23 @@ import (
 // Doc represents a document with named entities extracted
 type Doc struct {
 	Tokens []string `json:"tokens"`
+}
+
+// WriteJSON serizlizes the doc to a gzipped file
+func (doc *Doc) WriteJSON(path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := gzip.NewWriter(f)
+	defer w.Close()
+
+	if err := json.NewEncoder(w).Encode(doc); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Entity contains the text and label along with the amount of occurences
