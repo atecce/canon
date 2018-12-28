@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/atecce/canon/fs"
 	"github.com/atecce/canon/lib"
 )
 
@@ -28,12 +29,12 @@ func main() {
 
 				println(textPath)
 
-				doc, err := lib.NewDocFromPath(textPath)
+				ents, err := lib.NewEntsFromPath(textPath)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				if err := doc.WriteJSON(jsonPath); err != nil {
+				if err := fs.WriteGzippedJSON(jsonPath, &ents); err != nil {
 					log.Fatal(err)
 				}
 

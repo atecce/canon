@@ -15,6 +15,30 @@ import (
 	"github.com/yhat/scrape"
 )
 
+type Fetcher interface {
+	Fetch(name string) error
+	crawl()
+}
+
+func crawl(fetcher Fetcher) {
+	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
+		for _, node := range e.DOM.Next().Children().Nodes {
+			if node.FirstChild.FirstChild != nil {
+			}
+		}
+	})
+
+	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
+		authorCollector.Visit(domain + "browse/authors/" + string(letter))
+	}
+}
+
+type Tarballer struct {
+	tw   *tar.Writer
+	url  string
+	path string
+}
+
 // Tarball hits https://gutenberg.org and writes the text directly into a tarball
 //
 // tarball produces a single clean artifact which is easily moved around with file

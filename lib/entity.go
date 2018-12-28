@@ -3,7 +3,6 @@ package lib
 import (
 	"bufio"
 	"compress/gzip"
-	"encoding/json"
 	"os"
 
 	"github.com/jdkato/prose/chunk"
@@ -16,43 +15,24 @@ var (
 	tagger    = tag.NewPerceptronTagger()
 )
 
-// Doc represents a document with named entities extracted
-type Doc struct {
-	Entities []Entity `json:"entities"`
-}
-
-// WriteJSON serizlizes the doc to a gzipped file
-func (doc *Doc) WriteJSON(path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	w := gzip.NewWriter(f)
-	defer w.Close()
-
-	if err := json.NewEncoder(w).Encode(doc); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Entity contains the text and label along with the amount of occurences
+// Entity contains the text and the amount of occurences
 type Entity struct {
 	Text  string
 	Count uint
 }
 
-// NewDocFromPath constructs a doc from a path
-func NewDocFromPath(path string) (*Doc, error) {
+func NewEntsFromPath(path string) (*[]Entity, error) {
 
-	doc := new(Doc)
-
-	f, _ := os.Open(path)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
 	defer f.Close()
 
-	r, _ := gzip.NewReader(f)
+	r, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, err
+	}
 	defer r.Close()
 
 	entities := make(map[string]uint)
@@ -67,9 +47,10 @@ func NewDocFromPath(path string) (*Doc, error) {
 		}
 	}
 
-	for entity, count := range entities {
-		doc.Entities = append(doc.Entities, Entity{
-			Text:  entity,
+	var ents []Entity
+	for ent, count := range entities {
+		ents = append(ents, Entity{
+			Text:  ent,
 			Count: count,
 		})
 	}
@@ -83,7 +64,7 @@ func NewDocFromPath(path string) (*Doc, error) {
 	// 	corpus = corpus[:i]
 	// }
 
-	return doc, nil
+	return &ents, nil
 }
 
 // NewDocFromURL constucts a Doc from a url
