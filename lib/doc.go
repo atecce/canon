@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/jdkato/prose/chunk"
 	"github.com/jdkato/prose/tag"
-
 	"github.com/jdkato/prose/tokenize"
 )
 
@@ -18,7 +18,7 @@ var (
 
 // Doc represents a document with named entities extracted
 type Doc struct {
-	Tokens []tag.Token `json:"tokens"`
+	Entities []Entity `json:"entities"`
 }
 
 // WriteJSON serizlizes the doc to a gzipped file
@@ -40,8 +40,8 @@ func (doc *Doc) WriteJSON(path string) error {
 
 // Entity contains the text and label along with the amount of occurences
 type Entity struct {
-	Text, Label string
-	Count       uint
+	Text  string
+	Count uint
 }
 
 // NewDocFromPath constructs a doc from a path
@@ -55,9 +55,23 @@ func NewDocFromPath(path string) (*Doc, error) {
 	r, _ := gzip.NewReader(f)
 	defer r.Close()
 
+	entities := make(map[string]uint)
 	sc := bufio.NewScanner(r)
 	for sc.Scan() {
-		doc.Tokens = append(doc.Tokens, tagger.Tag(tokenizer.Tokenize(sc.Text()))...)
+		for _, entity := range chunk.Chunk(tagger.Tag(tokenizer.Tokenize(sc.Text())), chunk.TreebankNamedEntities) {
+			if count, ok := entities[entity]; ok {
+				entities[entity] = count + 1
+			} else {
+				entities[entity] = 1
+			}
+		}
+	}
+
+	for entity, count := range entities {
+		doc.Entities = append(doc.Entities, Entity{
+			Text:  entity,
+			Count: count,
+		})
 	}
 
 	// chomp the boilerplate at the end
