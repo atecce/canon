@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/jdkato/prose/tokenize"
 	prose "gopkg.in/jdkato/prose.v2"
 )
 
 // Doc represents a document with named entities extracted
 type Doc struct {
-	Text     string
+	Tokens   []string
 	Entities []Entity
 }
 
@@ -21,8 +22,38 @@ type Entity struct {
 	Count       uint
 }
 
-// NewDoc constucts a Doc with a url from gutenberg.org
-func NewDoc(url, path string) (*Doc, error) {
+// NewDocFromPath constructs a doc from a path
+func NewDocFromPath(path string) (*Doc, error) {
+
+	doc := new(Doc)
+
+	f, _ := os.Open(path)
+	defer f.Close()
+
+	r, _ := gzip.NewReader(f)
+	defer r.Close()
+
+	tokenizer := tokenize.NewTreebankWordTokenizer()
+
+	sc := bufio.NewScanner(r)
+	for sc.Scan() {
+		doc.Tokens = append(doc.Tokens, tokenizer.Tokenize(sc.Text())...)
+	}
+
+	// chomp the boilerplate at the end
+	// corpus := string(text)
+	// i := strings.Index(corpus, "End of the Project Gutenberg EBook")
+	// if i == -1 {
+	// 	Log(int64(len(corpus)), url, "", "WARN", "no license at end")
+	// } else {
+	// 	corpus = corpus[:i]
+	// }
+
+	return doc, nil
+}
+
+// NewDocFromURL constucts a Doc from a url
+func NewDocFromURL(url, path string) (*Doc, error) {
 
 	res, err := http.Get(url)
 	if err != nil {
@@ -32,6 +63,8 @@ func NewDoc(url, path string) (*Doc, error) {
 
 	doc := new(Doc)
 	entities := make(map[prose.Entity]uint)
+
+	// TODO
 	f, err := os.Create(path)
 	if err != nil {
 		return nil, err
@@ -46,8 +79,7 @@ func NewDoc(url, path string) (*Doc, error) {
 
 		chunk := sc.Text()
 
-		_, err = w.Write([]byte(chunk))
-		if err != nil {
+		if _, err := w.Write([]byte(chunk)); err != nil {
 			return nil, err
 		}
 
@@ -71,7 +103,6 @@ func NewDoc(url, path string) (*Doc, error) {
 				Count: count,
 			})
 		}
-
 	}
 
 	// chomp the boilerplate at the end
