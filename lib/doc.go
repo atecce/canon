@@ -3,17 +3,14 @@ package lib
 import (
 	"bufio"
 	"compress/gzip"
-	"net/http"
 	"os"
 
 	"github.com/jdkato/prose/tokenize"
-	prose "gopkg.in/jdkato/prose.v2"
 )
 
 // Doc represents a document with named entities extracted
 type Doc struct {
-	Tokens   []string
-	Entities []Entity
+	Tokens []string `json:"tokens"`
 }
 
 // Entity contains the text and label along with the amount of occurences
@@ -53,66 +50,66 @@ func NewDocFromPath(path string) (*Doc, error) {
 }
 
 // NewDocFromURL constucts a Doc from a url
-func NewDocFromURL(url, path string) (*Doc, error) {
+// func NewDocFromURL(url, path string) (*Doc, error) {
 
-	res, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
+// 	res, err := http.Get(url)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer res.Body.Close()
 
-	doc := new(Doc)
-	entities := make(map[prose.Entity]uint)
+// 	doc := new(Doc)
+// 	entities := make(map[prose.Entity]uint)
 
-	// TODO
-	f, err := os.Create(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
+// 	// TODO
+// 	f, err := os.Create(path)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer f.Close()
 
-	w := gzip.NewWriter(f)
-	defer w.Close()
+// 	w := gzip.NewWriter(f)
+// 	defer w.Close()
 
-	sc := bufio.NewScanner(res.Body)
-	for sc.Scan() {
+// 	sc := bufio.NewScanner(res.Body)
+// 	for sc.Scan() {
 
-		chunk := sc.Text()
+// 		chunk := sc.Text()
 
-		if _, err := w.Write([]byte(chunk)); err != nil {
-			return nil, err
-		}
+// 		if _, err := w.Write([]byte(chunk)); err != nil {
+// 			return nil, err
+// 		}
 
-		docChunk, err := prose.NewDocument(chunk)
-		if err != nil {
-			return nil, err
-		}
+// 		docChunk, err := prose.NewDocument(chunk)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		for _, ent := range docChunk.Entities() {
-			if count, ok := entities[ent]; ok {
-				entities[ent] = count + 1
-			} else {
-				entities[ent] = 1
-			}
-		}
+// 		for _, ent := range docChunk.Entities() {
+// 			if count, ok := entities[ent]; ok {
+// 				entities[ent] = count + 1
+// 			} else {
+// 				entities[ent] = 1
+// 			}
+// 		}
 
-		for ent, count := range entities {
-			doc.Entities = append(doc.Entities, Entity{
-				Text:  ent.Text,
-				Label: ent.Label,
-				Count: count,
-			})
-		}
-	}
+// 		for ent, count := range entities {
+// 			doc.Entities = append(doc.Entities, Entity{
+// 				Text:  ent.Text,
+// 				Label: ent.Label,
+// 				Count: count,
+// 			})
+// 		}
+// 	}
 
-	// chomp the boilerplate at the end
-	// corpus := string(text)
-	// i := strings.Index(corpus, "End of the Project Gutenberg EBook")
-	// if i == -1 {
-	// 	Log(int64(len(corpus)), url, "", "WARN", "no license at end")
-	// } else {
-	// 	corpus = corpus[:i]
-	// }
+// 	// chomp the boilerplate at the end
+// 	// corpus := string(text)
+// 	// i := strings.Index(corpus, "End of the Project Gutenberg EBook")
+// 	// if i == -1 {
+// 	// 	Log(int64(len(corpus)), url, "", "WARN", "no license at end")
+// 	// } else {
+// 	// 	corpus = corpus[:i]
+// 	// }
 
-	return doc, nil
-}
+// 	return doc, nil
+// }

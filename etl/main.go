@@ -3,11 +3,10 @@ package main
 import (
 	"compress/gzip"
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/kr/pretty"
 
 	"github.com/atecce/canon/lib"
 )
@@ -32,12 +31,31 @@ func writeJSON(doc *lib.Doc, path string) error {
 
 func main() {
 
-	filepath.Walk("gutenberg", func(path string, info os.FileInfo, err error) error {
+	sem := make(chan struct{}, 16)
+
+	filepath.Walk(".corpora/gutenberg", func(path string, info os.FileInfo, err error) error {
 
 		if strings.Contains(path, ".txt.") {
-			println(path)
-			doc, _ := lib.NewDocFromPath(path)
-			pretty.Println(doc)
+
+			sem <- struct{}{}
+
+			go func(textPath, jsonPath string) {
+				defer func() {
+					<-sem
+				}()
+
+				println(textPath)
+
+				doc, err := lib.NewDocFromPath(textPath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if err := writeJSON(doc, jsonPath); err != nil {
+					log.Fatal(err)
+				}
+
+			}(path, strings.Replace(path, ".txt.", ".json.", -1))
 		}
 
 		return nil
