@@ -53,7 +53,7 @@ func Tarball(name string) error {
 
 				path := filepath.Join(author, name+".txt")
 
-				if err := write(url, path, tw); err != nil {
+				if _, err := write(url, path, tw); err != nil {
 					lib.Log(nil, url, path, "ERR", "writing: "+err.Error())
 				}
 			}
@@ -67,52 +67,53 @@ func Tarball(name string) error {
 	return nil
 }
 
-func write(url, path string, tw *tar.Writer) error {
+func write(url, path string, tw *tar.Writer) (int64, error) {
 	res, err := http.Get(url)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer res.Body.Close()
 
+	var size int64
 	if res.ContentLength == -1 {
 
 		b, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
-		size := int64(len(b))
+		size = int64(len(b))
 
 		if err := tw.WriteHeader(&tar.Header{
 			Name: path,
 			Size: size,
 			Mode: 0444,
 		}); err != nil {
-			return err
+			return 0, err
 		}
 
 		lib.Log(&size, url, path, "INFO", "writing")
 		if _, err := tw.Write(b); err != nil {
-			return err
+			return 0, err
 		}
 
 	} else {
 
-		size := res.ContentLength
+		size = res.ContentLength
 
 		if err := tw.WriteHeader(&tar.Header{
 			Name: path,
 			Size: size,
 			Mode: 0444,
 		}); err != nil {
-			return err
+			return 0, err
 		}
 
 		lib.Log(&size, url, path, "INFO", "writing")
-		if _, err := io.Copy(tw, res.Body); err != nil {
-			return err
+		if n, err := io.Copy(tw, res.Body); err != nil {
+			return n, err
 		}
 	}
 
-	return nil
+	return size, nil
 }
