@@ -6,12 +6,19 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/jdkato/prose/tag"
+
 	"github.com/jdkato/prose/tokenize"
+)
+
+var (
+	tokenizer = tokenize.NewTreebankWordTokenizer()
+	tagger    = tag.NewPerceptronTagger()
 )
 
 // Doc represents a document with named entities extracted
 type Doc struct {
-	Tokens []string `json:"tokens"`
+	Tokens []tag.Token `json:"tokens"`
 }
 
 // WriteJSON serizlizes the doc to a gzipped file
@@ -48,11 +55,9 @@ func NewDocFromPath(path string) (*Doc, error) {
 	r, _ := gzip.NewReader(f)
 	defer r.Close()
 
-	tokenizer := tokenize.NewTreebankWordTokenizer()
-
 	sc := bufio.NewScanner(r)
 	for sc.Scan() {
-		doc.Tokens = append(doc.Tokens, tokenizer.Tokenize(sc.Text())...)
+		doc.Tokens = append(doc.Tokens, tagger.Tag(tokenizer.Tokenize(sc.Text()))...)
 	}
 
 	// chomp the boilerplate at the end
