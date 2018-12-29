@@ -34,7 +34,7 @@ func main() {
 					log.Fatal(err)
 				}
 
-				if err := fs.WriteGzippedJSON(jsonPath, &ents); err != nil {
+				if err := fs.WriteJSON(jsonPath, &ents); err != nil {
 					log.Fatal(err)
 				}
 

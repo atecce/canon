@@ -3,12 +3,11 @@ package fetch
 import (
 	"archive/tar"
 	"compress/gzip"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/atecce/canon/fs"
 
 	"github.com/atecce/canon/lib"
 	"github.com/gocolly/colly"
@@ -16,14 +15,31 @@ import (
 )
 
 type Fetcher interface {
+	GetAuthor() string
+	GetTitle() string
+	Join(string, string) string
 	Fetch(name string) error
 	crawl()
 }
 
 func crawl(fetcher Fetcher) {
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
+
+		author := fetcher.GetAuthor()
+
 		for _, node := range e.DOM.Next().Children().Nodes {
-			if node.FirstChild.FirstChild != nil {
+			child := node.FirstChild
+			grandchild := child.FirstChild
+			if grandchild != nil {
+
+				url := domain + scrape.Attr(child, "href") + ".txt.utf-8"
+				if strings.Contains(url, "wikipedia") {
+					return
+				}
+
+				title := grandchild.Data
+
+				path := fetcher.Join(author, title)
 			}
 		}
 	})
@@ -34,7 +50,8 @@ func crawl(fetcher Fetcher) {
 }
 
 type Tarballer struct {
-	tw   *tar.Writer
+	tw *tar.Writer
+
 	url  string
 	path string
 }
@@ -50,7 +67,10 @@ type Tarballer struct {
 // bytes in memory
 func Tarball(name string) error {
 
-	f, _ := os.Create(name)
+	f, err := os.Create(name)
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 
 	gzw := gzip.NewWriter(f)
@@ -77,7 +97,7 @@ func Tarball(name string) error {
 
 				path := filepath.Join(author, name+".txt")
 
-				if _, err := write(url, path, tw); err != nil {
+				if err := fs.GetTarFile(url, path, tw); err != nil {
 					lib.Log(nil, url, path, "ERR", "writing: "+err.Error())
 				}
 			}
@@ -89,55 +109,4 @@ func Tarball(name string) error {
 	}
 
 	return nil
-}
-
-func write(url, path string, tw *tar.Writer) (int64, error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return 0, err
-	}
-	defer res.Body.Close()
-
-	var size int64
-	if res.ContentLength == -1 {
-
-		b, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return 0, err
-		}
-
-		size = int64(len(b))
-
-		if err := tw.WriteHeader(&tar.Header{
-			Name: path,
-			Size: size,
-			Mode: 0444,
-		}); err != nil {
-			return 0, err
-		}
-
-		lib.Log(&size, url, path, "INFO", "writing")
-		if _, err := tw.Write(b); err != nil {
-			return 0, err
-		}
-
-	} else {
-
-		size = res.ContentLength
-
-		if err := tw.WriteHeader(&tar.Header{
-			Name: path,
-			Size: size,
-			Mode: 0444,
-		}); err != nil {
-			return 0, err
-		}
-
-		lib.Log(&size, url, path, "INFO", "writing")
-		if n, err := io.Copy(tw, res.Body); err != nil {
-			return n, err
-		}
-	}
-
-	return size, nil
 }

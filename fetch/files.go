@@ -1,9 +1,6 @@
 package fetch
 
 import (
-	"compress/gzip"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +9,7 @@ import (
 
 	"github.com/gocolly/colly"
 
+	"github.com/atecce/canon/fs"
 	"github.com/atecce/canon/lib"
 )
 
@@ -60,7 +58,7 @@ func Files(root string) error {
 					lib.Log(nil, url, path, "INFO", "checking for path")
 					if _, err := os.Stat(path); os.IsNotExist(err) {
 						lib.Log(nil, url, path, "INFO", "not on fs. fetching")
-						if err := fetchFile(url, path); err != nil {
+						if err := fs.GetFile(url, path); err != nil {
 							lib.Log(nil, url, path, "ERR", "fetching: "+err.Error())
 						}
 					}
@@ -71,30 +69,6 @@ func Files(root string) error {
 
 	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
 		authorCollector.Visit(domain + "browse/authors/" + string(letter))
-	}
-
-	return nil
-}
-
-func fetchFile(url, path string) error {
-
-	res, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	w := gzip.NewWriter(f)
-	defer w.Close()
-
-	if _, err := io.Copy(w, res.Body); err != nil {
-		return err
 	}
 
 	return nil
