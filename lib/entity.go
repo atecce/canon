@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/jdkato/prose/chunk"
@@ -73,67 +74,12 @@ func NewEntsFromPath(path string) (*[]Entity, error) {
 	return NewEnts(r)
 }
 
-// NewDocFromURL constucts a Doc from a url
-// func NewDocFromURL(url, path string) (*Doc, error) {
+func NewEntsFromURL(url, path string) (*[]Entity, error) {
 
-// 	res, err := http.Get(url)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer res.Body.Close()
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
 
-// 	doc := new(Doc)
-// 	entities := make(map[prose.Entity]uint)
-
-// 	// TODO
-// 	f, err := os.Create(path)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer f.Close()
-
-// 	w := gzip.NewWriter(f)
-// 	defer w.Close()
-
-// 	sc := bufio.NewScanner(res.Body)
-// 	for sc.Scan() {
-
-// 		chunk := sc.Text()
-
-// 		if _, err := w.Write([]byte(chunk)); err != nil {
-// 			return nil, err
-// 		}
-
-// 		docChunk, err := prose.NewDocument(chunk)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		for _, ent := range docChunk.Entities() {
-// 			if count, ok := entities[ent]; ok {
-// 				entities[ent] = count + 1
-// 			} else {
-// 				entities[ent] = 1
-// 			}
-// 		}
-
-// 		for ent, count := range entities {
-// 			doc.Entities = append(doc.Entities, Entity{
-// 				Text:  ent.Text,
-// 				Label: ent.Label,
-// 				Count: count,
-// 			})
-// 		}
-// 	}
-
-// 	// chomp the boilerplate at the end
-// 	// corpus := string(text)
-// 	// i := strings.Index(corpus, "End of the Project Gutenberg EBook")
-// 	// if i == -1 {
-// 	// 	Log(int64(len(corpus)), url, "", "WARN", "no license at end")
-// 	// } else {
-// 	// 	corpus = corpus[:i]
-// 	// }
-
-// 	return doc, nil
-// }
+	return NewEnts(res.Body)
+}

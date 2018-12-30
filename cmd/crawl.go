@@ -48,6 +48,11 @@ var crawlCmd = &cobra.Command{
 				Root: "gutenberg.tar.gz",
 			}
 			break
+		case "entities":
+			fetcher = &fetch.EntitiesFetcher{
+				Root: "gutenberg",
+				Sem:  make(chan struct{}, 10),
+			}
 		default:
 			usage()
 		}

@@ -20,6 +20,12 @@ func main() {
 
 		if strings.Contains(path, ".txt.") {
 
+			println(path)
+
+			if _, err := os.Stat(path); !os.IsNotExist(err) {
+				return nil
+			}
+
 			sem <- struct{}{}
 
 			go func(textPath, jsonPath string) {
