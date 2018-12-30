@@ -3,7 +3,6 @@ package fetch
 import (
 	"archive/tar"
 	"compress/gzip"
-	"log"
 	"os"
 
 	"github.com/atecce/canon/fs"
@@ -30,13 +29,7 @@ func (tf *TarballFetcher) MkRoot() error {
 	if err != nil {
 		return err
 	}
-
 	gzw := gzip.NewWriter(f)
-
-	if gzw == nil {
-		log.Fatal("gzip writer is nil")
-	}
-
 	tw := tar.NewWriter(gzw)
 
 	tf.tw = tw
