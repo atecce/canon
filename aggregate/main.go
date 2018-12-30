@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/atecce/canon/fs"
+
 	"github.com/atecce/canon/lib"
-	"github.com/kr/pretty"
-	prose "gopkg.in/jdkato/prose.v2"
 )
 
 type Author struct {
@@ -26,10 +26,12 @@ func main() {
 
 	var (
 		currentDir      string
-		currentEntities map[prose.Entity]uint
+		currentEntities map[string]uint
 	)
 
-	filepath.Walk(lib.Dir, func(path string, info os.FileInfo, err error) error {
+	corporaEntities := make(map[string]uint)
+
+	filepath.Walk(".corpora/gutenberg/", func(path string, info os.FileInfo, err error) error {
 
 		name := info.Name()
 
@@ -41,53 +43,55 @@ func main() {
 		// new author
 		if info.IsDir() && name != currentDir {
 
-			var docEntities []lib.Entity
-
-			// print out accumulated entities
+			var authorEntities []lib.Entity
 			if currentEntities != nil {
-				println()
+				for text, count := range currentEntities {
 
-				for ent, count := range currentEntities {
-					docEntities = append(docEntities, lib.Entity{
-						Label: ent.Label,
-						Text:  ent.Text,
+					authorEntities = append(authorEntities, lib.Entity{
+						Text:  text,
 						Count: count,
 					})
+
+					if corporaCount, ok := corporaEntities[text]; ok {
+						corporaEntities[text] = count + corporaCount
+					} else {
+						corporaEntities[text] = count
+					}
 				}
 			}
 
 			// reset author
 			currentDir = name
-			currentEntities = make(map[prose.Entity]uint)
+			currentEntities = make(map[string]uint)
 
-			// split dir name for author metadata
-			tmp := strings.Split(name, ",")
+			// // split dir name for author metadata
+			// tmp := strings.Split(name, ",")
 
-			println()
+			// println()
 
-			if len(tmp) == 3 {
+			// if len(tmp) == 3 {
 
-				life := strings.Split(tmp[2], "-")
+			// 	life := strings.Split(tmp[2], "-")
 
-				birthYear, _ := strconv.Atoi(life[0])
-				deathYear, _ := strconv.Atoi(life[1])
+			// 	birthYear, _ := strconv.Atoi(life[0])
+			// 	deathYear, _ := strconv.Atoi(life[1])
 
-				birth := time.Date(birthYear, time.January, 0, 0, 0, 0, 0, time.UTC)
-				death := time.Date(deathYear, time.January, 0, 0, 0, 0, 0, time.UTC)
+			// 	birth := time.Date(birthYear, time.January, 0, 0, 0, 0, 0, time.UTC)
+			// 	death := time.Date(deathYear, time.January, 0, 0, 0, 0, 0, time.UTC)
 
-				author := Author{
-					FirstName: &tmp[1],
-					LastName:  &tmp[0],
-					Life:      [2]*time.Time{&birth, &death},
-					Entities:  docEntities,
-				}
+			// 	author := Author{
+			// 		FirstName: &tmp[1],
+			// 		LastName:  &tmp[0],
+			// 		Life:      [2]*time.Time{&birth, &death},
+			// 		Entities:  authorEntities,
+			// 	}
 
-				pretty.Println(author)
+			// 	pretty.Println(author)
 
-			} else {
-				pretty.Println("TODO", tmp)
-			}
-			println()
+			// } else {
+			// 	pretty.Println("TODO", tmp)
+			// }
+			// println()
 
 		} else {
 
@@ -108,28 +112,40 @@ func main() {
 					return nil
 				}
 
-				var doc lib.Doc
-				if err = json.NewDecoder(r).Decode(&doc); err != nil {
+				var entities []lib.Entity
+				if err = json.NewDecoder(r).Decode(&entities); err != nil {
 					fmt.Println(err)
 					return nil
 				}
 
 				// aggregate entities from the authors work
-				for _, docEnt := range doc.Entities {
-					proseEnt := prose.Entity{
-						Label: docEnt.Label,
-						Text:  docEnt.Text,
-					}
-
-					if count, ok := currentEntities[proseEnt]; ok {
-						currentEntities[proseEnt] = count + docEnt.Count
+				for _, entity := range entities {
+					if count, ok := currentEntities[entity.Text]; ok {
+						currentEntities[entity.Text] = count + entity.Count
 					} else {
-						currentEntities[proseEnt] = docEnt.Count
+						currentEntities[entity.Text] = entity.Count
 					}
 				}
+
+				f.Close()
+				r.Close()
 			}
 		}
 
 		return nil
 	})
+
+	var totalEntities []lib.Entity
+	for text, count := range corporaEntities {
+		totalEntities = append(totalEntities, lib.Entity{
+			Text:  text,
+			Count: count,
+		})
+	}
+
+	sort.Slice(totalEntities, func(i, j int) bool {
+		return totalEntities[i].Count > totalEntities[j].Count
+	})
+
+	fs.WriteJSON("entities.json.gz", &totalEntities)
 }
