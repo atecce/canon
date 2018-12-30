@@ -21,14 +21,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func usage() {
+	println("usage: canon crawl [files | tarball]")
+	os.Exit(1)
+}
+
 var fetchCmd = &cobra.Command{
-	Use:   "fetch",
-	Short: "fetch data directly from gutenberg",
+	Use:   "crawl",
+	Short: "crawl gutenberg for corpora",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 1 {
-			println("usage: canon fetch [files | tarball]")
-			os.Exit(1)
+			usage()
 		}
 
 		var fetcher fetch.Fetcher
@@ -45,8 +49,7 @@ var fetchCmd = &cobra.Command{
 			}
 			break
 		default:
-			println("usage: canon fetch [files | tarball]")
-			os.Exit(1)
+			usage()
 		}
 
 		fetch.Crawl(fetcher)
