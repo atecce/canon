@@ -26,7 +26,7 @@ func usage() {
 	os.Exit(1)
 }
 
-var fetchCmd = &cobra.Command{
+var crawlCmd = &cobra.Command{
 	Use:   "crawl",
 	Short: "crawl gutenberg for corpora",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -57,7 +57,7 @@ var fetchCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(fetchCmd)
+	rootCmd.AddCommand(crawlCmd)
 
 	// Here you will define your flags and configuration settings.
 

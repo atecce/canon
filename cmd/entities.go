@@ -15,21 +15,24 @@
 package cmd
 
 import (
+	"encoding/json"
+	"os"
+
+	"github.com/atecce/canon/lib"
 	"github.com/spf13/cobra"
 )
 
-// docCmd represents the doc command
-var docCmd = &cobra.Command{
-	Use: "doc",
+var entitiesCmd = &cobra.Command{
+	Use:   "entities",
+	Short: "extract entities from stdin",
 	Run: func(cmd *cobra.Command, args []string) {
-		// path := filepath.Join(lib.Dir, args[0])
-		// doc, _ := lib.NewDoc(path)
-		// json.NewEncoder(os.Stdout).Encode(&doc)
+		ents, _ := lib.NewEnts(os.Stdin)
+		json.NewEncoder(os.Stdout).Encode(&ents)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(docCmd)
+	rootCmd.AddCommand(entitiesCmd)
 
 	// Here you will define your flags and configuration settings.
 

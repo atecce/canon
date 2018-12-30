@@ -3,6 +3,7 @@ package lib
 import (
 	"bufio"
 	"compress/gzip"
+	"io"
 	"os"
 
 	"github.com/jdkato/prose/chunk"
@@ -21,18 +22,8 @@ type Entity struct {
 	Count uint
 }
 
-func NewEntsFromPath(path string) (*[]Entity, error) {
+func NewEnts(r io.ReadCloser) (*[]Entity, error) {
 
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	r, err := gzip.NewReader(f)
-	if err != nil {
-		return nil, err
-	}
 	defer r.Close()
 
 	entities := make(map[string]uint)
@@ -65,6 +56,21 @@ func NewEntsFromPath(path string) (*[]Entity, error) {
 	// }
 
 	return &ents, nil
+}
+
+func NewEntsFromPath(path string) (*[]Entity, error) {
+
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewEnts(r)
 }
 
 // NewDocFromURL constucts a Doc from a url
