@@ -41,9 +41,9 @@ func Crawl(fetcher Fetcher) {
 					return
 				}
 
-				title := grandchild.Data
+				title := strings.Replace(strings.Replace(grandchild.Data, "/", "|", -1), "\n", "", -1)
 
-				path := strings.Replace(strings.Replace(filepath.Join(author, title), "/", "|", -1), "\n", "", -1)
+				path := filepath.Join(author, title)
 
 				if err := fetcher.Fetch(url, path); err != nil {
 					lib.Log(nil, url, path, "ERR", "fetching: "+err.Error())

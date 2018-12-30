@@ -20,7 +20,7 @@ type FileFetcher struct {
 	Sem  chan struct{}
 }
 
-func (ff FileFetcher) MkRoot() error {
+func (ff *FileFetcher) MkRoot() error {
 	if _, err := os.Stat(ff.Root); os.IsNotExist(err) {
 		if mkErr := os.MkdirAll(ff.Root, 0700); mkErr != nil {
 			lib.Log(nil, ff.Root, "", "ERR", "failed to mkdir: "+err.Error())
@@ -29,16 +29,16 @@ func (ff FileFetcher) MkRoot() error {
 	return nil
 }
 
-func (ff FileFetcher) MkAuthorDir(name string) error {
-	if _, err := os.Stat(name); os.IsNotExist(err) {
-		if mkErr := os.MkdirAll(name, 0700); mkErr != nil {
+func (ff *FileFetcher) MkAuthorDir(name string) error {
+	if _, err := os.Stat(filepath.Join(ff.Root, name)); os.IsNotExist(err) {
+		if mkErr := os.MkdirAll(filepath.Join(ff.Root, name), 0700); mkErr != nil {
 			lib.Log(nil, name, "", "ERR", "failed to mkdir: "+err.Error())
 		}
 	}
 	return nil
 }
 
-func (ff FileFetcher) Fetch(url, path string) error {
+func (ff *FileFetcher) Fetch(url, path string) error {
 
 	ff.Sem <- struct{}{}
 
@@ -52,7 +52,7 @@ func (ff FileFetcher) Fetch(url, path string) error {
 		lib.Log(nil, url, fullPath, "INFO", "checking for path")
 		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 			lib.Log(nil, url, fullPath, "INFO", "not on fs. fetching")
-			if err := fs.GetFile(url, fullPath); err != nil {
+			if err := fs.GetFile(url, fullPath+".txt.gz"); err != nil {
 				lib.Log(nil, url, fullPath, "ERR", "fetching: "+err.Error())
 			}
 		}

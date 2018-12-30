@@ -3,6 +3,7 @@ package fetch
 import (
 	"archive/tar"
 	"compress/gzip"
+	"log"
 	"os"
 
 	"github.com/atecce/canon/fs"
@@ -23,31 +24,32 @@ type TarballFetcher struct {
 	tw *tar.Writer
 }
 
-func (tf TarballFetcher) MkRoot() error {
+func (tf *TarballFetcher) MkRoot() error {
 
 	f, err := os.Create(tf.Root)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	gzw := gzip.NewWriter(f)
-	defer gzw.Close()
+
+	if gzw == nil {
+		log.Fatal("gzip writer is nil")
+	}
 
 	tw := tar.NewWriter(gzw)
-	defer tw.Close()
 
 	tf.tw = tw
 
 	return nil
 }
 
-func (tf TarballFetcher) MkAuthorDir(name string) error {
+func (tf *TarballFetcher) MkAuthorDir(name string) error {
 	return nil
 }
 
-func (tf TarballFetcher) Fetch(url, path string) error {
-	if err := fs.GetTarFile(url, path, tf.tw); err != nil {
+func (tf *TarballFetcher) Fetch(url, path string) error {
+	if err := fs.GetTarFile(url, path+".txt", tf.tw); err != nil {
 		return err
 	}
 	return nil

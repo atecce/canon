@@ -34,13 +34,13 @@ var fetchCmd = &cobra.Command{
 		var fetcher fetch.Fetcher
 		switch args[0] {
 		case "files":
-			fetcher = fetch.FileFetcher{
+			fetcher = &fetch.FileFetcher{
 				Root: "gutenberg",
 				Sem:  make(chan struct{}, 10),
 			}
 			break
 		case "tarball":
-			fetcher = fetch.TarballFetcher{
+			fetcher = &fetch.TarballFetcher{
 				Root: "gutenberg.tar.gz",
 			}
 			break
