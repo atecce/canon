@@ -15,21 +15,11 @@ type EntitiesFetcher struct {
 }
 
 func (ef *EntitiesFetcher) MkRoot() error {
-	if _, err := os.Stat(ef.Root); os.IsNotExist(err) {
-		if mkErr := os.MkdirAll(ef.Root, 0700); mkErr != nil {
-			lib.Log(nil, ef.Root, "", "ERR", "failed to mkdir: "+err.Error())
-		}
-	}
-	return nil
+	return fs.Mkdir(ef.Root)
 }
 
 func (ef *EntitiesFetcher) MkAuthorDir(name string) error {
-	if _, err := os.Stat(filepath.Join(ef.Root, name)); os.IsNotExist(err) {
-		if mkErr := os.MkdirAll(filepath.Join(ef.Root, name), 0700); mkErr != nil {
-			lib.Log(nil, name, "", "ERR", "failed to mkdir: "+err.Error())
-		}
-	}
-	return nil
+	return fs.Mkdir(filepath.Join(ef.Root, name))
 }
 
 func (ef *EntitiesFetcher) Fetch(url, path string) error {

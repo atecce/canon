@@ -12,6 +12,15 @@ import (
 	"github.com/atecce/canon/lib"
 )
 
+func Mkdir(name string) error {
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		if mkErr := os.MkdirAll(name, 0700); mkErr != nil {
+			return mkErr
+		}
+	}
+	return nil
+}
+
 func WriteJSON(path string, obj interface{}) error {
 
 	f, err := os.Create(path)
