@@ -4,59 +4,11 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/atecce/canon/fs"
-
-	"github.com/atecce/canon/lib"
-	"github.com/gocolly/colly"
-	"github.com/yhat/scrape"
 )
 
-type Fetcher interface {
-	GetAuthor() string
-	GetTitle() string
-	Join(string, string) string
-	Fetch(name string) error
-	crawl()
-}
-
-func crawl(fetcher Fetcher) {
-	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
-
-		author := fetcher.GetAuthor()
-
-		for _, node := range e.DOM.Next().Children().Nodes {
-			child := node.FirstChild
-			grandchild := child.FirstChild
-			if grandchild != nil {
-
-				url := domain + scrape.Attr(child, "href") + ".txt.utf-8"
-				if strings.Contains(url, "wikipedia") {
-					return
-				}
-
-				title := grandchild.Data
-
-				path := fetcher.Join(author, title)
-			}
-		}
-	})
-
-	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
-		authorCollector.Visit(domain + "browse/authors/" + string(letter))
-	}
-}
-
-type Tarballer struct {
-	tw *tar.Writer
-
-	url  string
-	path string
-}
-
-// Tarball hits https://gutenberg.org and writes the text directly into a tarball
+// TarballFetcher hits https://gutenberg.org and writes the text directly into a tarball
 //
 // tarball produces a single clean artifact which is easily moved around with file
 // operations
@@ -65,9 +17,15 @@ type Tarballer struct {
 // mostly likely need to start it from scratch. in addition, because you need to
 // write file sizes in tar headers, it can create a considerable footprint counting
 // bytes in memory
-func Tarball(name string) error {
+type TarballFetcher struct {
+	Root string
 
-	f, err := os.Create(name)
+	tw *tar.Writer
+}
+
+func (tf TarballFetcher) MkRoot() error {
+
+	f, err := os.Create(tf.Root)
 	if err != nil {
 		return err
 	}
@@ -79,34 +37,18 @@ func Tarball(name string) error {
 	tw := tar.NewWriter(gzw)
 	defer tw.Close()
 
-	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
+	tf.tw = tw
 
-		// remove pilcrows from author name
-		author := strings.Replace(e.ChildText("a"), "¶", "", -1)
+	return nil
+}
 
-		for _, node := range e.DOM.Next().Children().Nodes {
-			if node.FirstChild.FirstChild != nil {
+func (tf TarballFetcher) MkAuthorDir(name string) error {
+	return nil
+}
 
-				// remove forward slashes and new lines
-				name := lib.RemoveNewlines(strings.Replace(node.FirstChild.FirstChild.Data, "/", "|", -1))
-
-				url := domain + scrape.Attr(node.FirstChild, "href") + ".txt.utf-8"
-				if strings.Contains(url, "wikipedia") {
-					return
-				}
-
-				path := filepath.Join(author, name+".txt")
-
-				if err := fs.GetTarFile(url, path, tw); err != nil {
-					lib.Log(nil, url, path, "ERR", "writing: "+err.Error())
-				}
-			}
-		}
-	})
-
-	for _, letter := range "abcdefghijklmnopqrstuvwxyz" {
-		authorCollector.Visit(domain + "browse/authors/" + string(letter))
+func (tf TarballFetcher) Fetch(url, path string) error {
+	if err := fs.GetTarFile(url, path, tf.tw); err != nil {
+		return err
 	}
-
 	return nil
 }

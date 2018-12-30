@@ -2,18 +2,8 @@ package lib
 
 import (
 	"encoding/json"
-	"path/filepath"
-	"strings"
 	"time"
 )
-
-// Dir is the root directory where all the text data is stored
-var Dir = filepath.Join("/", "keybase", "public", "atec", "data", "gutenberg")
-
-// RemoveNewlines is used for filenames
-func RemoveNewlines(str string) string {
-	return strings.Replace(str, "\n", "", -1)
-}
 
 // Log writes json to stderr
 func Log(size *int64, in, out, level, msg string) {

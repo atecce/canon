@@ -60,7 +60,6 @@ func GetTarFile(url, path string, tw *tar.Writer) error {
 	}
 	defer res.Body.Close()
 
-	var size int64
 	if res.ContentLength == -1 {
 
 		b, err := ioutil.ReadAll(res.Body)
@@ -68,7 +67,7 @@ func GetTarFile(url, path string, tw *tar.Writer) error {
 			return err
 		}
 
-		size = int64(len(b))
+		size := int64(len(b))
 
 		if err := tw.WriteHeader(&tar.Header{
 			Name: path,
@@ -85,7 +84,7 @@ func GetTarFile(url, path string, tw *tar.Writer) error {
 
 	} else {
 
-		size = res.ContentLength
+		size := res.ContentLength
 
 		if err := tw.WriteHeader(&tar.Header{
 			Name: path,

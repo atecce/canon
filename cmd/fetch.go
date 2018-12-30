@@ -31,17 +31,25 @@ var fetchCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		var fetcher fetch.Fetcher
 		switch args[0] {
 		case "files":
-			fetch.Files("gutenberg")
+			fetcher = fetch.FileFetcher{
+				Root: "gutenberg",
+				Sem:  make(chan struct{}, 10),
+			}
 			break
 		case "tarball":
-			fetch.Tarball("gutenberg.tar.gz")
+			fetcher = fetch.TarballFetcher{
+				Root: "gutenberg.tar.gz",
+			}
 			break
 		default:
 			println("usage: canon fetch [files | tarball]")
 			os.Exit(1)
 		}
+
+		fetch.Crawl(fetcher)
 	},
 }
 
