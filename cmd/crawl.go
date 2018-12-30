@@ -22,7 +22,7 @@ import (
 )
 
 func usage() {
-	println("usage: canon crawl [files | tarball]")
+	println("usage: canon crawl [files | tarball | entities]")
 	os.Exit(1)
 }
 
