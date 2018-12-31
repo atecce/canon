@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/jdkato/prose/chunk"
 	"github.com/jdkato/prose/tag"
@@ -30,12 +32,16 @@ func NewEnts(r io.ReadCloser) (*[]Entity, error) {
 	entities := make(map[string]uint)
 	sc := bufio.NewScanner(r)
 	for sc.Scan() {
-		for _, entity := range chunk.Chunk(tagger.Tag(tokenizer.Tokenize(sc.Text())), chunk.TreebankNamedEntities) {
-			if count, ok := entities[entity]; ok {
-				entities[entity] = count + 1
-			} else {
-				entities[entity] = 1
-			}
+
+		text := sc.Text()
+
+		// chomp the boilerplate at the end
+		i := strings.Index(text, "End of the Project Gutenberg EBook")
+		if i == -1 {
+			extractEntities(text, entities)
+		} else {
+			extractEntities(text[:i], entities)
+			break
 		}
 	}
 
@@ -47,16 +53,21 @@ func NewEnts(r io.ReadCloser) (*[]Entity, error) {
 		})
 	}
 
-	// chomp the boilerplate at the end
-	// corpus := string(text)
-	// i := strings.Index(corpus, "End of the Project Gutenberg EBook")
-	// if i == -1 {
-	// 	Log(int64(len(corpus)), url, "", "WARN", "no license at end")
-	// } else {
-	// 	corpus = corpus[:i]
-	// }
+	sort.Slice(ents, func(i, j int) bool {
+		return ents[i].Count > ents[j].Count
+	})
 
 	return &ents, nil
+}
+
+func extractEntities(text string, entities map[string]uint) {
+	for _, entity := range chunk.Chunk(tagger.Tag(tokenizer.Tokenize(text)), chunk.TreebankNamedEntities) {
+		if count, ok := entities[entity]; ok {
+			entities[entity] = count + 1
+		} else {
+			entities[entity] = 1
+		}
+	}
 }
 
 func NewEntsFromPath(path string) (*[]Entity, error) {
