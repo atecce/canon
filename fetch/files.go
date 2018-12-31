@@ -25,7 +25,7 @@ func (ff *FileFetcher) MkRoot() error {
 }
 
 func (ff *FileFetcher) MkAuthorDir(name string) error {
-	return fs.Mkdir(filepath.Join(ef.Root, name))
+	return fs.Mkdir(filepath.Join(ff.Root, name))
 }
 
 func (ff *FileFetcher) Fetch(url, path string) error {
@@ -39,9 +39,7 @@ func (ff *FileFetcher) Fetch(url, path string) error {
 
 		fullPath := filepath.Join(ff.Root, path)
 
-		lib.Log(nil, url, fullPath, "INFO", "checking for path")
 		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			lib.Log(nil, url, fullPath, "INFO", "not on fs. fetching")
 			if err := fs.GetFile(url, fullPath+".txt.gz"); err != nil {
 				lib.Log(nil, url, fullPath, "ERR", "fetching: "+err.Error())
 			}
