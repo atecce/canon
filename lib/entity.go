@@ -21,8 +21,8 @@ var (
 
 // Entity contains the text and the amount of occurences
 type Entity struct {
-	Text  string
-	Count uint
+	Text  string `json:"text"`
+	Count uint   `json:"count"`
 }
 
 func NewEnts(r io.ReadCloser) (*[]Entity, error) {
