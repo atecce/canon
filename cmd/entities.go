@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/atecce/canon/lib"
@@ -26,8 +27,15 @@ var entitiesCmd = &cobra.Command{
 	Use:   "entities",
 	Short: "extract entities from stdin",
 	Run: func(cmd *cobra.Command, args []string) {
-		ents, _ := lib.NewEnts(os.Stdin)
-		json.NewEncoder(os.Stdout).Encode(&ents)
+		ents, err := lib.NewEnts(os.Stdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to construct entities: %v\n", err)
+			os.Exit(1)
+		}
+		if err := json.NewEncoder(os.Stdout).Encode(&ents); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to encode json: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
