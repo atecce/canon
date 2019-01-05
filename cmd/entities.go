@@ -17,24 +17,63 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/atecce/canon/fs"
 	"github.com/atecce/canon/lib"
 	"github.com/spf13/cobra"
 )
 
 var entitiesCmd = &cobra.Command{
-	Use:   "entities",
-	Short: "extract entities from stdin",
+	Use:   "entities [dir]",
+	Short: "extract entities",
 	Run: func(cmd *cobra.Command, args []string) {
-		ents, err := lib.NewEnts(os.Stdin)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to construct entities: %v\n", err)
-			os.Exit(1)
-		}
-		if err := json.NewEncoder(os.Stdout).Encode(&ents); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to encode json: %v\n", err)
-			os.Exit(1)
+
+		if len(args) == 0 {
+			ents, err := lib.NewEnts(os.Stdin)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to construct entities: %v\n", err)
+				os.Exit(1)
+			}
+			if err := json.NewEncoder(os.Stdout).Encode(&ents); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to encode json: %v\n", err)
+				os.Exit(1)
+			}
+		} else {
+			sem := make(chan struct{}, 16)
+
+			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
+
+				if strings.Contains(path, ".txt.") {
+
+					println(path)
+
+					sem <- struct{}{}
+
+					go func(textPath, jsonPath string) {
+						defer func() {
+							<-sem
+						}()
+
+						println(textPath)
+
+						ents, err := lib.NewEntsFromPath(textPath)
+						if err != nil {
+							log.Fatal(err)
+						}
+
+						if err := fs.WriteJSON(jsonPath, &ents); err != nil {
+							log.Fatal(err)
+						}
+
+					}(path, strings.Replace(path, ".txt.", ".json.", -1))
+				}
+
+				return nil
+			})
 		}
 	},
 }
