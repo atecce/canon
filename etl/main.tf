@@ -14,26 +14,31 @@ resource "google_compute_firewall" "provisioner" {
     source_ranges = ["0.0.0.0/0"]
     allow = {
         protocol = "tcp"
-        ports = ["22"]
+        ports = ["22","80","443"]
     }
 }
     
 resource "google_compute_instance" "default" {
 
-    name = "etl"
+    name = "canon"
     zone = "us-east1-b"
     tags = ["provisioner"]
 
     network_interface = {
         network = "default"
-        access_config = {}
-    }
-    machine_type = "n1-standard-1"
-    boot_disk = {
-        initialize_params = {
-            image = "debian-cloud/debian-9"
+        access_config = {
+            nat_ip = "35.237.15.177"
         }
     }
+    machine_type = "n1-standard-8"
+    boot_disk = {
+        initialize_params = {
+            image = "centos-cloud/centos-7"
+            size = 100
+        }
+    }
+
+    tags = ["http-server", "https-server"]
 
     provisioner "remote-exec" {
         connection = {
@@ -43,10 +48,26 @@ resource "google_compute_instance" "default" {
             timeout = "120s"
         }
         inline = [
-            "wget https://atec.keybase.pub/bin/canon/etl",
-            # TODO
-            # "chmod 755 etl",
-            # "./etl 2>etl.log &"
+            "sudo yum install -y wget perl-Digest-SHA java-sdk",
+
+            "wget https://atec.keybase.pub/bin/proxy",
+            "chmod 755 proxy",
+            "wget https://atec.keybase.pub/etc/proxy.service",
+            "sudo mv proxy.service /etc/systemd/system/",
+            "sudo mv proxy /usr/sbin/",
+
+            "wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.1.rpm",
+            "wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.1.rpm.sha512",
+            "shasum -a 512 -c elasticsearch-6.5.1.rpm.sha512",
+            "sudo rpm --install elasticsearch-6.5.1.rpm",
+            "sudo yum install -y elasticsearch",
+
+            "sudo systemctl daemon-reload",
+            "sudo systemctl enable proxy.service",
+            "sudo systemctl enable elasticsearch.service",
+
+            "sudo systemctl start proxy.service",
+            "sudo systemctl start elasticsearch.service",
         ]
     }
 
