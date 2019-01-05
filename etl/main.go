@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/atecce/canon/lib"
+	"github.com/sirupsen/logrus"
 )
 
 func removeInvalidChars(str string) string {
@@ -46,7 +46,7 @@ func main() {
 			author := strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path))))
 			// TODO check per title and not just per author
 			if _, done := authors[author]; done {
-				log.Println("[INFO] author", author, "already", http.MethodPut)
+				logrus.Info("author ", author, " already ", http.MethodPut)
 				return nil
 			}
 
@@ -76,7 +76,7 @@ func main() {
 
 				f, err := os.Open(path)
 				if err != nil {
-					log.Println("[ERR]", err)
+					logrus.Error(err)
 					return
 				}
 				defer f.Close()
@@ -92,10 +92,10 @@ func main() {
 
 				b, _ := json.Marshal(&temp)
 
-				log.Println("[INFO]", http.MethodPut, u.String())
+				logrus.Info(http.MethodPut, " ", u.String())
 				req, err = http.NewRequest(http.MethodPut, u.String(), bytes.NewReader(b))
 				if err != nil {
-					log.Println("[ERR]", err)
+					logrus.Error(err)
 					return
 				}
 				req.Header.Add("Content-Type", "application/json")
@@ -103,12 +103,12 @@ func main() {
 
 				res, err = http.DefaultClient.Do(req)
 				if err != nil {
-					log.Println("[ERR]", err)
+					logrus.Error(err)
 					return
 				}
 				defer res.Body.Close()
 
-				log.Println("[INFO]", res.Status)
+				logrus.Info(res.Status)
 				// TODO try again on error
 				// if res.StatusCode != http.StatusCreated {
 				// 	return
@@ -116,10 +116,10 @@ func main() {
 
 				b, err = ioutil.ReadAll(res.Body)
 				if err != nil {
-					log.Println("[ERR]", err)
+					logrus.Error(err)
 					return
 				}
-				log.Println("[INFO]", string(b))
+				logrus.Info(string(b))
 
 			}(author, removeInvalidChars(strings.Split(info.Name(), ".")[0]))
 
