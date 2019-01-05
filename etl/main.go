@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,10 +30,10 @@ type Entities struct {
 
 func main() {
 
-	// res, _ := http.Get("http://canon.atec.pub/_aliases")
-	// b, _ := ioutil.ReadAll(res.Body)
-	// var authors map[string]interface{}
-	// json.Unmarshal(b, &authors)
+	res, _ := http.Get("http://canon.atec.pub/_aliases")
+	b, _ := ioutil.ReadAll(res.Body)
+	var authors map[string]interface{}
+	json.Unmarshal(b, &authors)
 
 	sem := make(chan struct{}, 10)
 
@@ -43,16 +44,15 @@ func main() {
 		if strings.Contains(path, ".json.") {
 
 			author := strings.ToLower(removeInvalidChars(filepath.Base(filepath.Dir(path))))
-			// // TODO check per title and not just per author
-			// if _, done := authors[author]; done {
-			// 	log.Println("[INFO] author", author, "already", http.MethodPut)
-			// 	return nil
-			// }
+			// TODO check per title and not just per author
+			if _, done := authors[author]; done {
+				log.Println("[INFO] author", author, "already", http.MethodPut)
+				return nil
+			}
 
 			sem <- struct{}{}
 
 			go func(author, title string) {
-
 				defer func() {
 					<-sem
 				}()
@@ -60,8 +60,19 @@ func main() {
 				u := url.URL{
 					Scheme: "http",
 					Host:   "canon.atec.pub",
-					Path:   filepath.Join(author, "entities", title),
+					Path:   filepath.Join(author, "_settings"),
 				}
+
+				req, _ := http.NewRequest(http.MethodPut, u.String(), bytes.NewReader([]byte(
+					`{"index.mapping.total_fields.limit": 10000}`)))
+				req.Header.Add("Content-Type", "application/json")
+
+				res, _ := http.DefaultClient.Do(req)
+
+				io.Copy(os.Stderr, res.Body)
+				println()
+
+				u.Path = filepath.Join(author, "entities", title)
 
 				f, err := os.Open(path)
 				if err != nil {
@@ -82,7 +93,7 @@ func main() {
 				b, _ := json.Marshal(&temp)
 
 				log.Println("[INFO]", http.MethodPut, u.String())
-				req, err := http.NewRequest(http.MethodPut, u.String(), bytes.NewReader(b))
+				req, err = http.NewRequest(http.MethodPut, u.String(), bytes.NewReader(b))
 				if err != nil {
 					log.Println("[ERR]", err)
 					return
@@ -90,7 +101,7 @@ func main() {
 				req.Header.Add("Content-Type", "application/json")
 				// req.Header.Add("Content-Encoding", "gzip")
 
-				res, err := http.DefaultClient.Do(req)
+				res, err = http.DefaultClient.Do(req)
 				if err != nil {
 					log.Println("[ERR]", err)
 					return
