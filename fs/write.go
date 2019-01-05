@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/atecce/canon/lib"
+	"github.com/sirupsen/logrus"
 )
 
 func Mkdir(name string) error {
@@ -106,7 +106,11 @@ func GetTarFile(url, path string, tw *tar.Writer) error {
 			return err
 		}
 
-		lib.Log(&size, url, path, "INFO", "writing")
+		logrus.WithFields(logrus.Fields{
+			"size": &size,
+			"src":  url,
+			"dst":  path,
+		}).Info("writing")
 		if _, err := tw.Write(b); err != nil {
 			return err
 		}
@@ -123,7 +127,11 @@ func GetTarFile(url, path string, tw *tar.Writer) error {
 			return err
 		}
 
-		lib.Log(&size, url, path, "INFO", "writing")
+		logrus.WithFields(logrus.Fields{
+			"size": &size,
+			"src":  url,
+			"dst":  path,
+		}).Info("copying")
 		if _, err := io.Copy(tw, res.Body); err != nil {
 			return err
 		}

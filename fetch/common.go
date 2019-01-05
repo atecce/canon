@@ -1,8 +1,8 @@
 package fetch
 
 import (
-	"github.com/atecce/canon/lib"
 	"github.com/gocolly/colly"
+	"github.com/sirupsen/logrus"
 )
 
 const domain = "https://www.gutenberg.org/"
@@ -13,6 +13,9 @@ func init() {
 	authorCollector = colly.NewCollector()
 
 	authorCollector.OnRequest(func(r *colly.Request) {
-		lib.Log(nil, r.URL.Path, "", "INFO", r.Method)
+		logrus.WithFields(logrus.Fields{
+			"path":   r.URL.Path,
+			"method": r.Method,
+		}).Info("crawling")
 	})
 }

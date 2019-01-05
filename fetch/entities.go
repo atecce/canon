@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/atecce/canon/fs"
 
 	"github.com/atecce/canon/lib"
@@ -34,18 +36,32 @@ func (ef *EntitiesFetcher) Fetch(url, path string) error {
 
 		fullPath := filepath.Join(ef.Root, path) + ".json.gz"
 
-		lib.Log(nil, url, fullPath, "INFO", "checking for path")
+		logrus.WithFields(logrus.Fields{
+			"path": fullPath,
+		}).Info("checking")
 		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 
-			lib.Log(nil, url, fullPath, "INFO", "not on fs. getting ents from url")
+			logrus.WithFields(logrus.Fields{
+				"url":  url,
+				"path": fullPath,
+			}).Info("not on fs. getting ents")
 			ents, err := lib.NewEntsFromURL(url, fullPath)
 			if err != nil {
-				lib.Log(nil, url, fullPath, "ERR", "getting ents: "+err.Error())
+				logrus.WithFields(logrus.Fields{
+					"url":  url,
+					"path": fullPath,
+				}).Error("getting ents:", err)
 			}
 
-			lib.Log(nil, url, fullPath, "INFO", "writing")
+			logrus.WithFields(logrus.Fields{
+				"url":  url,
+				"path": fullPath,
+			}).Info("writing json")
 			if err := fs.WriteJSON(fullPath, ents); err != nil {
-				lib.Log(nil, url, fullPath, "ERR", "writing: "+err.Error())
+				logrus.WithFields(logrus.Fields{
+					"url":  url,
+					"path": fullPath,
+				}).Error("writing json:", err)
 				return
 			}
 		}

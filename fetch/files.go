@@ -4,8 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/atecce/canon/fs"
-	"github.com/atecce/canon/lib"
 )
 
 // FileFetcher hits https://gutenberg.org and writes the text into files in a directory
@@ -44,7 +45,10 @@ func (ff *FileFetcher) Fetch(url, path string) error {
 
 			var getErr error
 
-			lib.Log(nil, url, fullPath, "INFO", "getting")
+			logrus.WithFields(logrus.Fields{
+				"url":  url,
+				"path": fullPath,
+			}).Info("getting file")
 			switch ff.Ext {
 			case ".txt":
 				getErr = fs.GetFile(url, fullPath+ff.Ext)
@@ -54,7 +58,10 @@ func (ff *FileFetcher) Fetch(url, path string) error {
 				println("invalid extension")
 			}
 			if getErr != nil {
-				lib.Log(nil, url, fullPath, "ERR", "fetching: "+err.Error())
+				logrus.WithFields(logrus.Fields{
+					"url":  url,
+					"path": fullPath,
+				}).Error("fetching:", err)
 			}
 		}
 	}()

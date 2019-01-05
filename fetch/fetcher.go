@@ -4,7 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/atecce/canon/lib"
+	"github.com/sirupsen/logrus"
+
 	"github.com/gocolly/colly"
 	"github.com/yhat/scrape"
 )
@@ -18,7 +19,7 @@ type Fetcher interface {
 func Crawl(fetcher Fetcher) {
 
 	if err := fetcher.MkRoot(); err != nil {
-		lib.Log(nil, "", "", "ERR", "making root: "+err.Error())
+		logrus.Error("making root:", err)
 	}
 
 	authorCollector.OnHTML("h2", func(e *colly.HTMLElement) {
@@ -26,7 +27,7 @@ func Crawl(fetcher Fetcher) {
 		author := strings.Replace(e.ChildText("a"), "¶", "", -1)
 
 		if err := fetcher.MkAuthorDir(author); err != nil {
-			lib.Log(nil, "", "", "ERR", "making author directory: "+err.Error())
+			logrus.Error("making author directory:", err)
 		}
 
 		for _, node := range e.DOM.Next().Children().Nodes {
@@ -46,7 +47,10 @@ func Crawl(fetcher Fetcher) {
 				path := filepath.Join(author, title)
 
 				if err := fetcher.Fetch(url, path); err != nil {
-					lib.Log(nil, url, path, "ERR", "fetching: "+err.Error())
+					logrus.WithFields(logrus.Fields{
+						"url":  url,
+						"path": path,
+					}).Error("fetching:", err)
 				}
 			}
 		}
