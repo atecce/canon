@@ -52,6 +52,26 @@ func GetFile(url, path string) error {
 	}
 	defer f.Close()
 
+	if _, err := io.Copy(f, res.Body); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetGzippedFile(url, path string) error {
+
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
 	w := gzip.NewWriter(f)
 	defer w.Close()
 

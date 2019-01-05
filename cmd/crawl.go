@@ -38,9 +38,16 @@ var crawlCmd = &cobra.Command{
 		var fetcher fetch.Fetcher
 		switch args[0] {
 		case "files":
+			var ext string
+			if *gzipFlag {
+				ext = ".txt.gz"
+			} else {
+				ext = ".txt"
+			}
 			fetcher = &fetch.FileFetcher{
 				Root: "gutenberg",
 				Sem:  make(chan struct{}, 10),
+				Ext:  ext,
 			}
 			break
 		case "tarball":
@@ -61,6 +68,8 @@ var crawlCmd = &cobra.Command{
 	},
 }
 
+var gzipFlag *bool
+
 func init() {
 	rootCmd.AddCommand(crawlCmd)
 
@@ -70,7 +79,5 @@ func init() {
 	// and all subcommands, e.g.:
 	// fetchCmd.PersistentFlags().String("foo", "", "A help for foo")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// fetchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	gzipFlag = crawlCmd.Flags().Bool("gzip", false, "gzips files")
 }

@@ -18,6 +18,7 @@ import (
 type FileFetcher struct {
 	Root string
 	Sem  chan struct{}
+	Ext  string
 }
 
 func (ff *FileFetcher) MkRoot() error {
@@ -40,7 +41,19 @@ func (ff *FileFetcher) Fetch(url, path string) error {
 		fullPath := filepath.Join(ff.Root, path)
 
 		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			if err := fs.GetFile(url, fullPath+".txt.gz"); err != nil {
+
+			var getErr error
+
+			lib.Log(nil, url, fullPath, "INFO", "getting")
+			switch ff.Ext {
+			case ".txt":
+				getErr = fs.GetFile(url, fullPath+ff.Ext)
+			case ".txt.gz":
+				getErr = fs.GetGzippedFile(url, fullPath+ff.Ext)
+			default:
+				println("invalid extension")
+			}
+			if getErr != nil {
 				lib.Log(nil, url, fullPath, "ERR", "fetching: "+err.Error())
 			}
 		}
