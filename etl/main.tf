@@ -1,3 +1,16 @@
+provider "cloudflare" {
+    email = "root@atec.pub"
+    token = "${file("/keybase/private/atec/etc/cloudflare/token")}"
+}
+
+resource "cloudflare_record" "canon" {
+    name = "canon"
+    domain = "atec.pub"
+    type = "A"
+    value = "${google_compute_address.static.address}"
+    proxied = true
+}
+
 provider "google" {
     credentials = "${file("/keybase/private/atec/etc/gcp/telos.json")}"
     project = "telos-162721"
@@ -17,6 +30,10 @@ resource "google_compute_firewall" "provisioner" {
         ports = ["22","80","443"]
     }
 }
+
+resource "google_compute_address" "static" {
+    name = "canon"
+}
     
 resource "google_compute_instance" "default" {
 
@@ -27,7 +44,7 @@ resource "google_compute_instance" "default" {
     network_interface = {
         network = "default"
         access_config = {
-            nat_ip = "35.237.15.177"
+            nat_ip = "${google_compute_address.static.address}"
         }
     }
     machine_type = "n1-standard-8"
