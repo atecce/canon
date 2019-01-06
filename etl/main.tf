@@ -34,7 +34,7 @@ resource "google_compute_firewall" "provisioner" {
 resource "google_compute_address" "static" {
     name = "canon"
 }
-    
+  
 resource "google_compute_instance" "default" {
 
     name = "canon"
@@ -65,28 +65,60 @@ resource "google_compute_instance" "default" {
             timeout = "120s"
         }
         inline = [
-            "sudo yum install -y wget perl-Digest-SHA java-sdk",
+            "sudo yum install -y wget",
 
-            "wget https://atec.keybase.pub/bin/proxy",
-            "chmod 755 proxy",
-            "wget https://atec.keybase.pub/etc/proxy.service",
-            "sudo mv proxy.service /etc/systemd/system/",
-            "sudo mv proxy /usr/sbin/",
+            "wget https://atec.keybase.pub/etc/sshd_config",
+            "sudo mv sshd_config /etc/ssh/sshd_config",
+            "sudo systemctl restart sshd.service",
+        ]
+    }
+
+    provisioner "file" {
+        connection = {
+            type = "ssh"
+            user = "root"
+            private_key = "${file("~/.ssh/google_compute_engine")}"
+            timeout = "120s"
+        }
+        source = "/keybase/public/atec/bin/proxy"
+        destination = "/usr/sbin/proxy"
+    }
+
+    provisioner "file" {
+        connection = {
+            type = "ssh"
+            user = "root"
+            private_key = "${file("~/.ssh/google_compute_engine")}"
+            timeout = "120s"
+        }
+        source = "/keybase/public/atec/etc/proxy.service"
+        destination = "/etc/systemd/system/proxy.service"
+    }
+
+    provisioner "remote-exec" {
+        connection = {
+            type = "ssh"
+            user = "root"
+            private_key = "${file("~/.ssh/google_compute_engine")}"
+            timeout = "120s"
+        }
+        inline = [
+            "yum install -y perl-Digest-SHA java-sdk",
 
             "wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.1.rpm",
             "wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.1.rpm.sha512",
             "shasum -a 512 -c elasticsearch-6.5.1.rpm.sha512",
-            "sudo rpm --install elasticsearch-6.5.1.rpm",
-            "sudo yum install -y elasticsearch",
+            "rpm --install elasticsearch-6.5.1.rpm",
+            "yum install -y elasticsearch",
 
-            "sudo systemctl daemon-reload",
-            "sudo systemctl enable proxy.service",
-            "sudo systemctl enable elasticsearch.service",
+            "systemctl daemon-reload",
+            "systemctl enable proxy.service",
+            "systemctl enable elasticsearch.service",
 
-            "sudo systemctl start proxy.service",
-            "sudo systemctl start elasticsearch.service",
+            "chmod 755 /usr/sbin/proxy",
+            "systemctl start proxy.service",
+            "systemctl start elasticsearch.service",
         ]
     }
-
     depends_on = ["google_compute_firewall.provisioner"]
 }
