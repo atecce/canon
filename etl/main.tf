@@ -39,7 +39,6 @@ resource "google_compute_instance" "default" {
 
     name = "canon"
     zone = "us-east1-b"
-    tags = ["provisioner"]
 
     network_interface = {
         network = "default"
@@ -55,7 +54,7 @@ resource "google_compute_instance" "default" {
         }
     }
 
-    tags = ["http-server", "https-server"]
+    tags = ["http-server", "https-server", "provisioner"]
 
     provisioner "remote-exec" {
         connection = {

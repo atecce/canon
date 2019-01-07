@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/jdkato/prose/chunk"
@@ -19,13 +18,7 @@ var (
 	tagger    = tag.NewPerceptronTagger()
 )
 
-// Entity contains the text and the amount of occurences
-type Entity struct {
-	Text  string `json:"text"`
-	Count uint   `json:"count"`
-}
-
-func NewEnts(r io.ReadCloser) (*[]Entity, error) {
+func NewEnts(r io.ReadCloser) (map[string]uint, error) {
 
 	defer r.Close()
 
@@ -45,19 +38,7 @@ func NewEnts(r io.ReadCloser) (*[]Entity, error) {
 		}
 	}
 
-	var ents []Entity
-	for ent, count := range entities {
-		ents = append(ents, Entity{
-			Text:  ent,
-			Count: count,
-		})
-	}
-
-	sort.Slice(ents, func(i, j int) bool {
-		return ents[i].Count > ents[j].Count
-	})
-
-	return &ents, nil
+	return entities, nil
 }
 
 func extractEntities(text string, entities map[string]uint) {
@@ -70,7 +51,7 @@ func extractEntities(text string, entities map[string]uint) {
 	}
 }
 
-func NewEntsFromPath(path string) (*[]Entity, error) {
+func NewEntsFromPath(path string) (map[string]uint, error) {
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -85,7 +66,7 @@ func NewEntsFromPath(path string) (*[]Entity, error) {
 	return NewEnts(r)
 }
 
-func NewEntsFromURL(url, path string) (*[]Entity, error) {
+func NewEntsFromURL(url, path string) (map[string]uint, error) {
 
 	res, err := http.Get(url)
 	if err != nil {
