@@ -56,6 +56,7 @@ func (ff *FileFetcher) Fetch(url, path string) error {
 				getErr = fs.GetGzippedFile(url, fullPath+ff.Ext)
 			default:
 				println("invalid extension")
+				os.Exit(1)
 			}
 			if getErr != nil {
 				logrus.WithFields(logrus.Fields{

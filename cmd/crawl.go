@@ -56,9 +56,16 @@ var crawlCmd = &cobra.Command{
 			}
 			break
 		case "entities":
+			var ext string
+			if *gzipFlag {
+				ext = ".json.gz"
+			} else {
+				ext = ".json"
+			}
 			fetcher = &fetch.EntitiesFetcher{
 				Root: "gutenberg",
 				Sem:  make(chan struct{}, 10),
+				Ext:  ext,
 			}
 		default:
 			usage()

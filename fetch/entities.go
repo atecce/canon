@@ -14,6 +14,7 @@ import (
 type EntitiesFetcher struct {
 	Root string
 	Sem  chan struct{}
+	Ext  string
 }
 
 func (ef *EntitiesFetcher) MkRoot() error {
@@ -34,7 +35,7 @@ func (ef *EntitiesFetcher) Fetch(url, path string) error {
 			<-ef.Sem
 		}()
 
-		fullPath := filepath.Join(ef.Root, path) + ".json.gz"
+		fullPath := filepath.Join(ef.Root, path) + ef.Ext
 
 		logrus.WithFields(logrus.Fields{
 			"path": fullPath,
@@ -57,7 +58,18 @@ func (ef *EntitiesFetcher) Fetch(url, path string) error {
 				"url":  url,
 				"path": fullPath,
 			}).Info("writing json")
-			if err := fs.WriteJSON(fullPath, ents); err != nil {
+
+			var writeErr error
+			switch ef.Ext {
+			case ".json":
+				writeErr = fs.WriteJSON(fullPath, ents)
+			case ".json.gz":
+				writeErr = fs.WriteGzippedJSON(fullPath, ents)
+			default:
+				println("invalid extension")
+				os.Exit(1)
+			}
+			if writeErr != nil {
 				logrus.WithFields(logrus.Fields{
 					"url":  url,
 					"path": fullPath,
