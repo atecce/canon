@@ -22,7 +22,7 @@ import (
 )
 
 func usage() {
-	println("usage: canon crawl [files | tarball | entities]")
+	println("usage: canon crawl [files | entities]")
 	os.Exit(1)
 }
 
@@ -35,37 +35,24 @@ var crawlCmd = &cobra.Command{
 			usage()
 		}
 
+		var gzipExt string
+		if *gzipFlag {
+			gzipExt = ".gz"
+		}
+
 		var fetcher fetch.Fetcher
 		switch args[0] {
 		case "files":
-			var ext string
-			if *gzipFlag {
-				ext = ".txt.gz"
-			} else {
-				ext = ".txt"
-			}
 			fetcher = &fetch.FileFetcher{
 				Root: "gutenberg",
 				Sem:  make(chan struct{}, 10),
-				Ext:  ext,
+				Ext:  ".txt" + gzipExt,
 			}
-			break
-		case "tarball":
-			fetcher = &fetch.TarballFetcher{
-				Root: "gutenberg.tar.gz",
-			}
-			break
 		case "entities":
-			var ext string
-			if *gzipFlag {
-				ext = ".json.gz"
-			} else {
-				ext = ".json"
-			}
 			fetcher = &fetch.EntitiesFetcher{
 				Root: "gutenberg",
 				Sem:  make(chan struct{}, 10),
-				Ext:  ext,
+				Ext:  ".json" + gzipExt,
 			}
 		default:
 			usage()
