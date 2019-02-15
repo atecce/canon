@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// The strength of the canonical is manifested in the quiet persistence of the strongest writers.
+// Their fecundity is endless because they represent the heart and the head rather than the loins or the privileges of caste or sect or race
+
 package main
 
 import "github.com/atecce/canon/cmd"
