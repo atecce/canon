@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -20,12 +21,18 @@ func main() {
 			return err
 		}
 
-		var names []string
+		res := c.Response()
+
+		res.WriteHeader(http.StatusOK)
+
 		for _, fi := range fis {
-			names = append(names, fi.Name())
+			if err := json.NewEncoder(res).Encode(fi.Name()); err != nil {
+				return err
+			}
+			// time.Sleep(time.Minute)
 		}
 
-		return c.JSON(http.StatusOK, names)
+		return nil
 	})
 
 	e.GET("/:author", func(c echo.Context) error {
