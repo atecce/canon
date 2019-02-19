@@ -39,7 +39,7 @@ func main() {
 
 		var names []string
 		for _, fi := range fis {
-			names = append(names, author+"/"+fi.Name())
+			names = append(names, fi.Name())
 		}
 
 		return c.JSON(http.StatusOK, names)
