@@ -1,11 +1,62 @@
 package main
 
 import (
-	"log"
+	"io/ioutil"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	http.Handle("/", http.FileServer(http.Dir("/usr/local/var/canon/gutenberg")))
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	e := echo.New()
+
+	e.Use(middleware.Logger())
+
+	e.GET("/", func(c echo.Context) error {
+
+		fis, err := ioutil.ReadDir("/usr/local/var/canon/gutenberg")
+		if err != nil {
+			return err
+		}
+
+		var names []string
+		for _, fi := range fis {
+			names = append(names, fi.Name())
+		}
+
+		return c.JSON(http.StatusOK, names)
+	})
+
+	e.GET("/:author", func(c echo.Context) error {
+
+		author := c.Param("author")
+
+		fis, err := ioutil.ReadDir("/usr/local/var/canon/gutenberg/" + author)
+		if err != nil {
+			return err
+		}
+
+		var names []string
+		for _, fi := range fis {
+			names = append(names, author+"/"+fi.Name())
+		}
+
+		return c.JSON(http.StatusOK, names)
+	})
+
+	e.GET("/:author/:work", func(c echo.Context) error {
+
+		author := c.Param("author")
+		work := c.Param("work")
+
+		b, err := ioutil.ReadFile("/usr/local/var/canon/gutenberg/" + author + "/" + work)
+		if err != nil {
+			return err
+		}
+
+		return c.String(http.StatusOK, string(b))
+	})
+
+	e.Start(":8081")
 }
