@@ -12,10 +12,11 @@ func main() {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
+	e.Use(middleware.CORS())
 
 	e.GET("/", func(c echo.Context) error {
 
-		fis, err := ioutil.ReadDir("/usr/local/var/canon/gutenberg")
+		fis, err := ioutil.ReadDir("/var/canon/gutenberg")
 		if err != nil {
 			return err
 		}
@@ -38,7 +39,7 @@ func main() {
 
 		author := c.Param("author")
 
-		fis, err := ioutil.ReadDir("/usr/local/var/canon/gutenberg/" + author)
+		fis, err := ioutil.ReadDir("/var/canon/gutenberg/" + author)
 		if err != nil {
 			return err
 		}
@@ -56,7 +57,7 @@ func main() {
 		author := c.Param("author")
 		work := c.Param("work")
 
-		b, err := ioutil.ReadFile("/usr/local/var/canon/gutenberg/" + author + "/" + work)
+		b, err := ioutil.ReadFile("/var/canon/gutenberg/" + author + "/" + work)
 		if err != nil {
 			return err
 		}
@@ -64,5 +65,5 @@ func main() {
 		return c.String(http.StatusOK, string(b))
 	})
 
-	e.Start(":8081")
+	e.StartTLS(":443", "/etc/canon/server.crt", "/etc/canon/server.key")
 }
