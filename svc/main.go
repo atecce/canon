@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -26,7 +25,7 @@ func main() {
 		res.WriteHeader(http.StatusOK)
 
 		for _, fi := range fis {
-			if err := json.NewEncoder(res).Encode(fi.Name()); err != nil {
+			if _, err := res.Write([]byte(fi.Name() + "\n")); err != nil {
 				return err
 			}
 			// time.Sleep(time.Minute)
