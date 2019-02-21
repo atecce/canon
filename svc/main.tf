@@ -18,11 +18,11 @@ provider "google" {
     zone = "us-east1-b"
 }
 
-resource "google_compute_firewall" "canon-provisioner" {
+resource "google_compute_firewall" "canon" {
 
-    name = "canon-provisioner"
+    name = "canon"
     network = "default"
-    target_tags = ["canon-provisioner"]
+    target_tags = ["canon"]
 
     source_ranges = ["0.0.0.0/0"]
     allow = {
@@ -53,7 +53,7 @@ resource "google_compute_instance" "default" {
         }
     }
 
-    tags = ["http-server", "https-server", "canon-provisioner"]
+    tags = ["canon"]
 
     provisioner "remote-exec" {
         connection = {
@@ -130,5 +130,5 @@ resource "google_compute_instance" "default" {
         ]
     }
 
-    depends_on = ["google_compute_firewall.canon-provisioner"]
+    depends_on = ["google_compute_firewall.canon"]
 }
