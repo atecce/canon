@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/atecce/canon/fs"
+	"github.com/atecce/canon/io"
 	"github.com/atecce/canon/lib"
 	"github.com/spf13/cobra"
 )
@@ -65,7 +65,7 @@ var entitiesCmd = &cobra.Command{
 							log.Fatal(err)
 						}
 
-						if err := fs.WriteJSON(jsonPath, &ents); err != nil {
+						if err := io.WriteJSON(jsonPath, &ents); err != nil {
 							log.Fatal(err)
 						}
 

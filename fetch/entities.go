@@ -6,7 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/atecce/canon/fs"
+	"github.com/atecce/canon/io"
 
 	"github.com/atecce/canon/lib"
 )
@@ -18,11 +18,11 @@ type EntitiesFetcher struct {
 }
 
 func (ef *EntitiesFetcher) MkRoot() error {
-	return fs.Mkdir(ef.Root)
+	return io.Mkdir(ef.Root)
 }
 
 func (ef *EntitiesFetcher) MkAuthorDir(name string) error {
-	return fs.Mkdir(filepath.Join(ef.Root, name))
+	return io.Mkdir(filepath.Join(ef.Root, name))
 }
 
 func (ef *EntitiesFetcher) Fetch(url, path string) error {
@@ -62,9 +62,9 @@ func (ef *EntitiesFetcher) Fetch(url, path string) error {
 			var writeErr error
 			switch ef.Ext {
 			case ".json":
-				writeErr = fs.WriteJSON(fullPath, ents)
+				writeErr = io.WriteJSON(fullPath, ents)
 			case ".json.gz":
-				writeErr = fs.WriteGzippedJSON(fullPath, ents)
+				writeErr = io.WriteGzippedJSON(fullPath, ents)
 			default:
 				println("invalid extension")
 				os.Exit(1)

@@ -1,4 +1,4 @@
-package fs
+package io
 
 import (
 	"compress/gzip"

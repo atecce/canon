@@ -4,9 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/atecce/canon/io"
 	"github.com/sirupsen/logrus"
-
-	"github.com/atecce/canon/fs"
 )
 
 // FileFetcher hits https://gutenberg.org and writes the text into files in a directory
@@ -23,11 +22,11 @@ type FileFetcher struct {
 }
 
 func (ff *FileFetcher) MkRoot() error {
-	return fs.Mkdir(ff.Root)
+	return io.Mkdir(ff.Root)
 }
 
 func (ff *FileFetcher) MkAuthorDir(name string) error {
-	return fs.Mkdir(filepath.Join(ff.Root, name))
+	return io.Mkdir(filepath.Join(ff.Root, name))
 }
 
 func (ff *FileFetcher) Fetch(url, path string) error {
@@ -51,9 +50,9 @@ func (ff *FileFetcher) Fetch(url, path string) error {
 			}).Info("getting file")
 			switch ff.Ext {
 			case ".txt":
-				getErr = fs.GetFile(url, fullPath+ff.Ext)
+				getErr = io.GetFile(url, fullPath+ff.Ext)
 			case ".txt.gz":
-				getErr = fs.GetGzippedFile(url, fullPath+ff.Ext)
+				getErr = io.GetGzippedFile(url, fullPath+ff.Ext)
 			default:
 				println("invalid extension")
 				os.Exit(1)
