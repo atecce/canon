@@ -6,7 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/atecce/canon/io"
+	"github.com/atecce/io"
 
 	"github.com/atecce/canon/lib"
 )

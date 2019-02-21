@@ -6,6 +6,7 @@ require (
 	github.com/antchfx/htmlquery v1.0.0 // indirect
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
+	github.com/atecce/io v0.0.0-20190221184333-db80e4749f76
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/atecce/canon/io"
+	"github.com/atecce/io"
 	"github.com/sirupsen/logrus"
 )
 
