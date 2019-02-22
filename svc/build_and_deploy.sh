@@ -1,3 +1,5 @@
+set -e
+
 GOOS=linux GOARCH=386 go build
 
 gcloud compute scp svc canon:~

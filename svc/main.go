@@ -3,6 +3,8 @@ package main
 import (
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -46,7 +48,8 @@ func main() {
 
 		var names []string
 		for _, fi := range fis {
-			names = append(names, fi.Name())
+			name := fi.Name()
+			names = append(names, strings.TrimSuffix(name, filepath.Ext(name)))
 		}
 
 		return c.JSON(http.StatusOK, names)
@@ -57,7 +60,7 @@ func main() {
 		author := c.Param("author")
 		work := c.Param("work")
 
-		b, err := ioutil.ReadFile("/var/canon/gutenberg/" + author + "/" + work)
+		b, err := ioutil.ReadFile("/var/canon/gutenberg/" + author + "/" + work + ".json")
 		if err != nil {
 			return err
 		}
