@@ -27,7 +27,7 @@ resource "google_compute_firewall" "canon" {
     source_ranges = ["0.0.0.0/0"]
     allow = {
         protocol = "tcp"
-        ports = ["22","80","443"]
+        ports = ["22","443"]
     }
 }
 
