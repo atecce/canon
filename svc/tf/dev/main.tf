@@ -18,20 +18,47 @@ provider "google" {
     zone = "us-east1-b"
 }
 
+resource "google_compute_firewall" "canon-dev-ssh" {
+
+    name = "canon-dev-ssh"
+    network = "default"
+    target_tags = ["canon-dev"]
+
+    source_ranges = ["141.158.1.238","100.19.46.101"]
+
+    allow = {
+        protocol = "tcp"
+        ports = ["22"]
+    }
+}
+
+
 resource "google_compute_firewall" "canon-dev" {
     
     name = "canon-dev"
     network = "default"
     target_tags = ["canon-dev"]
 
-    # TODO break back out into ssh rule
-    # source_ranges = ["141.158.1.238","100.19.46.101"]
-
-    # only allow https ingress from Cloudflare
-    source_ranges = ["0.0.0.0/0"]
+    # https://www.cloudflare.com/ips-v4
+    source_ranges = [
+        "173.245.48.0/20",
+        "103.21.244.0/22",
+        "103.22.200.0/22",
+        "103.31.4.0/22",
+        "141.101.64.0/18",
+        "108.162.192.0/18",
+        "190.93.240.0/20",
+        "188.114.96.0/20",
+        "197.234.240.0/22",
+        "198.41.128.0/17",
+        "162.158.0.0/15",
+        "104.16.0.0/12",
+        "172.64.0.0/13",
+        "131.0.72.0/22"
+    ]
     allow = {
         protocol = "tcp"
-        ports = ["22","443"]
+        ports = ["443"]
     }
 }
 
