@@ -24,7 +24,11 @@ resource "google_compute_firewall" "canon-dev" {
     network = "default"
     target_tags = ["canon-dev"]
 
-    source_ranges = ["141.158.1.238","100.19.46.101"]
+    # TODO break back out into ssh rule
+    # source_ranges = ["141.158.1.238","100.19.46.101"]
+
+    # only allow https ingress from Cloudflare
+    source_ranges = ["0.0.0.0/0"]
     allow = {
         protocol = "tcp"
         ports = ["22","443"]
