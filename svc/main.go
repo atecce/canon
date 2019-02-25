@@ -14,49 +14,42 @@ import (
 
 var authors []string
 
+func init() {
+	fis, err := ioutil.ReadDir("/var/canon/gutenberg/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, fi := range fis {
+		author := fi.Name()
+		authors = append(authors, strings.TrimSuffix(author, filepath.Ext(author)))
+	}
+}
+
 func main() {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.CORS())
 
-	e.GET("/", func(c echo.Context) error {
+	e.GET("/authors", func(c echo.Context) error {
+
+		pattern := c.QueryParam("search")
 
 		res := c.Response()
 
 		res.WriteHeader(http.StatusOK)
 
-		for _, author := range authors {
+		for _, author := range fuzzy.Find(pattern, authors) {
 			if _, err := res.Write([]byte(author + "\n")); err != nil {
 				return err
 			}
-			// time.Sleep(time.Minute)
 		}
 
 		return nil
 	})
 
-	e.GET("/search/:pattern", func(c echo.Context) error {
-
-		pattern := c.Param("pattern")
-
-		res := c.Response()
-
-		res.WriteHeader(http.StatusOK)
-
-		found := fuzzy.Find(pattern, authors)
-
-		for _, author := range found {
-			if _, err := res.Write([]byte(author + "\n")); err != nil {
-				return err
-			}
-			// time.Sleep(time.Minute)
-		}
-
-		return nil
-	})
-
-	e.GET("/:author", func(c echo.Context) error {
+	e.GET("authors/:author", func(c echo.Context) error {
 
 		author := c.Param("author")
 
@@ -74,7 +67,7 @@ func main() {
 		return c.JSON(http.StatusOK, names)
 	})
 
-	e.GET("/:author/:work", func(c echo.Context) error {
+	e.GET("authors/:author/works/:work", func(c echo.Context) error {
 
 		author := c.Param("author")
 		work := c.Param("work")
@@ -86,16 +79,6 @@ func main() {
 
 		return c.String(http.StatusOK, string(b))
 	})
-
-	fis, err := ioutil.ReadDir("/var/canon/gutenberg/")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, fi := range fis {
-		author := fi.Name()
-		authors = append(authors, strings.TrimSuffix(author, filepath.Ext(author)))
-	}
 
 	e.StartTLS(":443", "/etc/canon/server.crt", "/etc/canon/server.key")
 }
