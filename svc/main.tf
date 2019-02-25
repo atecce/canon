@@ -18,6 +18,19 @@ provider "google" {
     zone = "us-east1-b"
 }
 
+resource "google_compute_firewall" "canon-ssh" {
+    
+    name = "canon-ssh"
+    network = "default"
+    target_tags = ["canon"]
+
+    source_ranges = ["141.158.1.238"]
+    allow = {
+        protocol = "tcp"
+        ports = ["22"]
+    }
+}
+
 resource "google_compute_firewall" "canon" {
 
     name = "canon"
@@ -27,7 +40,7 @@ resource "google_compute_firewall" "canon" {
     source_ranges = ["0.0.0.0/0"]
     allow = {
         protocol = "tcp"
-        ports = ["22","443"]
+        ports = ["443"]
     }
 }
 
