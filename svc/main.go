@@ -21,8 +21,7 @@ func init() {
 	}
 
 	for _, fi := range fis {
-		author := fi.Name()
-		authors = append(authors, strings.TrimSuffix(author, filepath.Ext(author)))
+		authors = append(authors, fi.Name())
 	}
 }
 
@@ -49,7 +48,7 @@ func main() {
 		return nil
 	})
 
-	e.GET("authors/:author", func(c echo.Context) error {
+	e.GET("/authors/:author", func(c echo.Context) error {
 
 		author := c.Param("author")
 
@@ -67,7 +66,7 @@ func main() {
 		return c.JSON(http.StatusOK, names)
 	})
 
-	e.GET("authors/:author/works/:work", func(c echo.Context) error {
+	e.GET("/authors/:author/works/:work", func(c echo.Context) error {
 
 		author := c.Param("author")
 		work := c.Param("work")
