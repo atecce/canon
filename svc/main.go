@@ -22,17 +22,12 @@ func main() {
 
 	e.GET("/", func(c echo.Context) error {
 
-		fis, err := ioutil.ReadDir("/var/canon/gutenberg")
-		if err != nil {
-			return err
-		}
-
 		res := c.Response()
 
 		res.WriteHeader(http.StatusOK)
 
-		for _, fi := range fis {
-			if _, err := res.Write([]byte(fi.Name() + "\n")); err != nil {
+		for _, author := range authors {
+			if _, err := res.Write([]byte(author + "\n")); err != nil {
 				return err
 			}
 			// time.Sleep(time.Minute)
