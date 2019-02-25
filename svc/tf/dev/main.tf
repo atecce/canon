@@ -24,7 +24,7 @@ resource "google_compute_firewall" "canon-dev" {
     network = "default"
     target_tags = ["canon-dev"]
 
-    source_ranges = ["141.158.1.238"]
+    source_ranges = ["141.158.1.238","100.19.46.101"]
     allow = {
         protocol = "tcp"
         ports = ["22","443"]
@@ -63,13 +63,18 @@ resource "google_compute_instance" "default" {
             timeout = "120s"
         }
         inline = [
-            "sudo mkdir -p /etc/canon",
-
             "sudo yum install -y wget",
+            
+            "sudo mkdir -p /etc/canon",
 
             "wget https://atec.keybase.pub/etc/sshd_config",
             "sudo mv sshd_config /etc/ssh/sshd_config",
             "sudo systemctl restart sshd.service",
+
+            "sudo mkdir -p /var/canon",
+
+            "wget https://atec.keybase.pub/data/gutenberg/entities.tar",
+            "sudo tar -xvf entities.tar -C /var/canon/"
         ]
     }
 
@@ -113,7 +118,7 @@ resource "google_compute_instance" "default" {
             private_key = "${file("~/.ssh/google_compute_engine")}"
             timeout = "120s"
         }
-        source = "canon.service"
+        source = "../../canon.service"
         destination = "/etc/systemd/system/canon.service"
     }
 
