@@ -32,7 +32,6 @@ resource "google_compute_firewall" "canon-dev-ssh" {
     }
 }
 
-
 resource "google_compute_firewall" "canon-dev" {
     
     name = "canon-dev"
