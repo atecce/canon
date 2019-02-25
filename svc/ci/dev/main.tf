@@ -138,32 +138,8 @@ resource "google_compute_instance" "default" {
             private_key = "${file("~/.ssh/google_compute_engine")}"
             timeout = "120s"
         }
-        source = "/keybase/public/atec/bin/canon"
-        destination = "/usr/sbin/canon"
-    }
-
-    provisioner "file" {
-        connection = {
-            type = "ssh"
-            user = "root"
-            private_key = "${file("~/.ssh/google_compute_engine")}"
-            timeout = "120s"
-        }
         source = "../../canon.service"
         destination = "/etc/systemd/system/canon.service"
-    }
-
-    provisioner "remote-exec" {
-        connection = {
-            type = "ssh"
-            user = "root"
-            private_key = "${file("~/.ssh/google_compute_engine")}"
-            timeout = "120s"
-        }
-        inline = [
-            "chmod 755 /usr/sbin/canon",
-            "systemctl start canon.service",
-        ]
     }
 
     depends_on = ["google_compute_firewall.canon-dev"]
