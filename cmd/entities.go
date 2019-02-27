@@ -47,7 +47,7 @@ var entitiesCmd = &cobra.Command{
 
 			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
 
-				if strings.Contains(path, ".txt.") {
+				if strings.Contains(path, ".txt") {
 
 					println(path)
 
@@ -69,7 +69,7 @@ var entitiesCmd = &cobra.Command{
 							log.Fatal(err)
 						}
 
-					}(path, strings.Replace(path, ".txt.", ".json.", -1))
+					}(path, strings.Replace(path, ".txt", ".json", -1))
 				}
 
 				return nil

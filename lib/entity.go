@@ -2,7 +2,6 @@ package lib
 
 import (
 	"bufio"
-	"compress/gzip"
 	"io"
 	"net/http"
 	"os"
@@ -58,12 +57,7 @@ func NewEntsFromPath(path string) (map[string]uint, error) {
 		return nil, err
 	}
 
-	r, err := gzip.NewReader(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewEnts(r)
+	return NewEnts(f)
 }
 
 func NewEntsFromURL(url, path string) (map[string]uint, error) {
