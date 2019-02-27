@@ -39,7 +39,7 @@ func Crawl(fetcher Fetcher) {
 
 				url := domain + scrape.Attr(child, "href") + ".txt.utf-8"
 				if strings.Contains(url, "wikipedia") {
-					return
+					continue
 				}
 
 				title := strings.Replace(strings.Replace(grandchild.Data, "/", "|", -1), "\n", "", -1)
