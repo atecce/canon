@@ -58,7 +58,7 @@ var entitiesCmd = &cobra.Command{
 							<-sem
 						}()
 
-						println(textPath)
+						println(jsonPath)
 
 						ents, err := lib.NewEntsFromPath(textPath)
 						if err != nil {
