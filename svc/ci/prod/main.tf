@@ -24,7 +24,11 @@ resource "google_compute_firewall" "canon-ssh" {
     network = "default"
     target_tags = ["canon"]
 
-    source_ranges = ["141.158.1.238","100.19.46.101"]
+    source_ranges = [
+	"141.158.1.238",
+	"100.19.46.101",
+	"65.207.13.162"
+    ]
 
     allow = {
         protocol = "tcp"
@@ -103,8 +107,8 @@ resource "google_compute_instance" "default" {
 
             "sudo mkdir -p /var/canon",
 
-            "wget https://atec.keybase.pub/data/gutenberg/entities.tar",
-            "sudo tar -xvf entities.tar -C /var/canon/"
+            "wget https://atec.keybase.pub/data/gutenberg/entities.tar.gz",
+            "sudo tar -xvf entities.tar.gz -C /var/canon/"
         ]
     }
 
