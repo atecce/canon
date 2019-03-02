@@ -9,7 +9,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 var (
@@ -44,7 +43,7 @@ func main() {
 
 	e.GET("/", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{
-			"/authors?search={pattern}":      "fuzzy search for an author",
+			"/authors?search={pattern}":      "search for an author",
 			"/authors/{author}":              "get an author by name",
 			"/authors/{author}/works/{work}": "get an authors work by name",
 		})
@@ -58,8 +57,15 @@ func main() {
 
 		res.WriteHeader(http.StatusOK)
 
-		for _, authorLower := range fuzzy.Find(strings.ToLower(pattern), authorsLower) {
-			if _, err := res.Write([]byte(lowerMap[authorLower] + "\n")); err != nil {
+		var matches []string
+		for _, authorLower := range authorsLower {
+			if strings.Contains(authorLower, strings.ToLower(pattern)) {
+				matches = append(matches, authorLower)
+			}
+		}
+
+		for _, match := range matches {
+			if _, err := res.Write([]byte(lowerMap[match] + "\n")); err != nil {
 				return err
 			}
 		}
