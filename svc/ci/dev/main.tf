@@ -25,9 +25,9 @@ resource "google_compute_firewall" "canon-dev-ssh" {
     target_tags = ["canon-dev"]
 
     source_ranges = [
-	"141.158.1.238",
-	"100.19.46.101",
-	"65.207.13.162"
+        "141.158.1.238",
+        "100.19.46.101",
+        "65.207.13.162"
     ]
 
     allow = {

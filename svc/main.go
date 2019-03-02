@@ -12,7 +12,12 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
-var authors []string
+var (
+	authors      []string
+	authorsLower []string
+
+	lowerMap = make(map[string]string)
+)
 
 func init() {
 	fis, err := ioutil.ReadDir("/var/canon/gutenberg/")
@@ -21,7 +26,13 @@ func init() {
 	}
 
 	for _, fi := range fis {
-		authors = append(authors, fi.Name())
+
+		author := fi.Name()
+		authorLower := strings.ToLower(author)
+
+		authors = append(authors, author)
+		authorsLower = append(authorsLower, authorLower)
+		lowerMap[authorLower] = author
 	}
 }
 
@@ -39,8 +50,8 @@ func main() {
 
 		res.WriteHeader(http.StatusOK)
 
-		for _, author := range fuzzy.Find(pattern, authors) {
-			if _, err := res.Write([]byte(author + "\n")); err != nil {
+		for _, authorLower := range fuzzy.Find(strings.ToLower(pattern), authorsLower) {
+			if _, err := res.Write([]byte(lowerMap[authorLower] + "\n")); err != nil {
 				return err
 			}
 		}
