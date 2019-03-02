@@ -42,6 +42,14 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.CORS())
 
+	e.GET("/", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"/authors?search={pattern}":      "fuzzy search for an author",
+			"/authors/{author}":              "get an author by name",
+			"/authors/{author}/works/{work}": "get an authors work by name",
+		})
+	})
+
 	e.GET("/authors", func(c echo.Context) error {
 
 		pattern := c.QueryParam("search")
