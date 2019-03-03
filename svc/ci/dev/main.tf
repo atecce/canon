@@ -98,6 +98,9 @@ resource "google_compute_instance" "default" {
         }
         inline = [
             "sudo yum install -y wget",
+
+            "sudo yum install -y https://prerelease.keybase.io/keybase_i386.rpm",
+            "run_keybase",
             
             "sudo mkdir -p /etc/canon",
 
@@ -106,8 +109,7 @@ resource "google_compute_instance" "default" {
             "sudo systemctl restart sshd.service",
 
             "sudo mkdir -p /var/canon",
-
-            "wget https://atec.keybase.pub/data/gutenberg/entities.tar.gz",
+            "cp /keybase/public/atec/data/gutenberg/entities.tar.gz .",
             "sudo tar -xvf entities.tar.gz -C /var/canon/"
         ]
     }
