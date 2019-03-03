@@ -109,7 +109,7 @@ resource "google_compute_instance" "default" {
             "sudo systemctl restart sshd.service",
 
             "sudo mkdir -p /var/canon",
-            "cp /keybase/public/atec/data/gutenberg/entities.tar.gz .",
+            "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.tar.gz .",
             "sudo tar -xvf entities.tar.gz -C /var/canon/"
         ]
     }
