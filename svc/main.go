@@ -98,5 +98,5 @@ func main() {
 		return c.String(http.StatusOK, string(b))
 	})
 
-	e.StartTLS(":443", "/etc/srv.crt", "/etc/srv.key")
+	e.StartTLS(":443", "/etc/canon/server.crt", "/etc/canon/server.key")
 }

@@ -107,8 +107,9 @@ resource "google_compute_instance" "default" {
             "keybase oneshot -u atec --paperkey '${var.kb_key}'",
 
             # root doesn't own kbfs
-            "cp /keybase/private/atec/etc/srv.crt . && sudo cp srv.crt /etc/",
-            "cp /keybase/private/atec/etc/srv.key . && sudo cp srv.key /etc/",
+            "sudo mkdir -p /etc/canon/",
+            "cp /keybase/private/atec/etc/server.crt . && sudo cp server.crt /etc/canon/",
+            "cp /keybase/private/atec/etc/server.key . && sudo cp server.key /etc/canon/",
             "cp /keybase/public/atec/etc/canon.service . && sudo cp canon.service /etc/systemd/system/",
 
             "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.tar.gz .",
