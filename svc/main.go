@@ -20,7 +20,7 @@ var (
 )
 
 func init() {
-	fis, err := ioutil.ReadDir("/var/canon/gutenberg/")
+	fis, err := ioutil.ReadDir("/var/gutenberg/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func main() {
 
 		author := c.Param("author")
 
-		fis, err := ioutil.ReadDir("/var/canon/gutenberg/" + author)
+		fis, err := ioutil.ReadDir("/var/gutenberg/" + author)
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func main() {
 		author := c.Param("author")
 		work := c.Param("work")
 
-		b, err := ioutil.ReadFile("/var/canon/gutenberg/" + author + "/" + work + ".json")
+		b, err := ioutil.ReadFile("/var/gutenberg/" + author + "/" + work + ".json")
 		if err != nil {
 			return err
 		}
@@ -98,5 +98,5 @@ func main() {
 		return c.String(http.StatusOK, string(b))
 	})
 
-	e.StartTLS(":443", "/etc/canon/server.crt", "/etc/canon/server.key")
+	e.StartTLS(":443", "/etc/srv.crt", "/etc/srv.key")
 }
