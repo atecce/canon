@@ -8,7 +8,7 @@ import (
 
 	"github.com/atecce/io"
 
-	"github.com/atecce/canon/lib"
+	"atec.pub/canon/lib"
 )
 
 type EntitiesFetcher struct {

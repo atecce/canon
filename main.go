@@ -17,7 +17,7 @@
 
 package main
 
-import "github.com/atecce/canon/cmd"
+import "atec.pub/canon/cmd"
 
 func main() {
 	cmd.Execute()
