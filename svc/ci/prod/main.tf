@@ -25,9 +25,9 @@ resource "google_compute_firewall" "canon-ssh" {
     target_tags = ["canon"]
 
     source_ranges = [
-	"141.158.1.238",
-	"100.19.46.101",
-	"65.207.13.162"
+        "141.158.1.238",
+        "100.19.46.101",
+        "65.207.13.162"
     ]
 
     allow = {
@@ -69,6 +69,10 @@ resource "google_compute_address" "static" {
     name = "canon"
 }
 
+variable "kb_key" {
+    type = "string"
+}
+
 resource "google_compute_instance" "default" {
  
     name = "canon"
@@ -97,53 +101,21 @@ resource "google_compute_instance" "default" {
             timeout = "120s"
         }
         inline = [
-            "sudo yum install -y wget",
-            
-            "sudo mkdir -p /etc/canon",
+            "sudo yum install -y https://prerelease.keybase.io/keybase_i386.rpm",
+            "run_keybase",
 
-            "wget https://atec.keybase.pub/etc/sshd_config",
-            "sudo mv sshd_config /etc/ssh/sshd_config",
-            "sudo systemctl restart sshd.service",
+            "keybase oneshot -u atec --paperkey '${var.kb_key}'",
 
-            "sudo mkdir -p /var/canon",
+            # root doesn't own kbfs
+            "sudo mkdir -p /etc/canon/",
+            "cp /keybase/private/atec/etc/server.crt . && sudo cp server.crt /etc/canon/",
+            "cp /keybase/private/atec/etc/server.key . && sudo cp server.key /etc/canon/",
+            "cp /keybase/public/atec/etc/canon.service . && sudo cp canon.service /etc/systemd/system/",
 
-            "wget https://atec.keybase.pub/data/gutenberg/entities.tar.gz",
-            "sudo tar -xvf entities.tar.gz -C /var/canon/"
+            "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.tar.gz .",
+            "sudo tar -xvf entities.tar.gz -C /var",
+
+            # TODO build and deploy
         ]
     }
-
-    provisioner "file" {
-        connection = {
-            type = "ssh"
-            user = "root"
-            private_key = "${file("~/.ssh/google_compute_engine")}"
-            timeout = "120s"
-        }
-        source = "/keybase/private/atec/etc/server.crt"
-        destination = "/etc/canon/server.crt"
-    }
-
-    provisioner "file" {
-        connection = {
-            type = "ssh"
-            user = "root"
-            private_key = "${file("~/.ssh/google_compute_engine")}"
-            timeout = "120s"
-        }
-        source = "/keybase/private/atec/etc/server.key"
-        destination = "/etc/canon/server.key"
-    }
-
-    provisioner "file" {
-        connection = {
-            type = "ssh"
-            user = "root"
-            private_key = "${file("~/.ssh/google_compute_engine")}"
-            timeout = "120s"
-        }
-        source = "../../canon.service"
-        destination = "/etc/systemd/system/canon.service"
-    }
-
-    depends_on = ["google_compute_firewall.canon"]
 }
