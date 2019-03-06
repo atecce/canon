@@ -6,8 +6,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"atec.pub/canon.git/lib"
-	"atec.pub/io.git"
+	"atec.pub/canon/lib"
+	"atec.pub/io"
 )
 
 type EntitiesFetcher struct {

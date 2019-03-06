@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"atec.pub/canon.git/lib"
-	"atec.pub/io.git"
+	"atec.pub/canon/lib"
+	"atec.pub/io"
 
 	"github.com/spf13/cobra"
 )

@@ -1,5 +1,5 @@
-# atec.pub/io.git v0.0.0-20190306220026-888b043ca3b1
-atec.pub/io.git
+# atec.pub/io v0.0.0-20190304204001-9d0caf5f1369
+atec.pub/io
 # github.com/PuerkitoBio/goquery v1.5.0
 github.com/PuerkitoBio/goquery
 # github.com/andybalholm/cascadia v1.0.0
