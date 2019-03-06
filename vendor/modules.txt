@@ -1,3 +1,5 @@
+# atec.pub/io.git v0.0.0-20190306220026-888b043ca3b1
+atec.pub/io.git
 # github.com/PuerkitoBio/goquery v1.5.0
 github.com/PuerkitoBio/goquery
 # github.com/andybalholm/cascadia v1.0.0
@@ -8,8 +10,6 @@ github.com/antchfx/htmlquery
 github.com/antchfx/xmlquery
 # github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e
 github.com/antchfx/xpath
-# github.com/atecce/io v0.0.0-20190221184333-db80e4749f76
-github.com/atecce/io
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/fsnotify/fsnotify v1.4.7

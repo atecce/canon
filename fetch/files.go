@@ -4,7 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/atecce/io"
+	"atec.pub/io.git"
+
 	"github.com/sirupsen/logrus"
 )
 

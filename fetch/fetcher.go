@@ -4,9 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/gocolly/colly"
+	"github.com/sirupsen/logrus"
 	"github.com/yhat/scrape"
 )
 

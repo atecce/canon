@@ -1,12 +1,14 @@
-module atec.pub/canon
+module atec.pub/canon.git
+
+go 1.12
 
 require (
+	atec.pub/io.git v0.0.0-20190306220026-888b043ca3b1
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/PuerkitoBio/goquery v1.5.0 // indirect
 	github.com/antchfx/htmlquery v1.0.0 // indirect
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
-	github.com/atecce/io v0.0.0-20190221184333-db80e4749f76
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

@@ -17,7 +17,8 @@ package cmd
 import (
 	"os"
 
-	"atec.pub/canon/fetch"
+	"atec.pub/canon.git/fetch"
+
 	"github.com/spf13/cobra"
 )
 
