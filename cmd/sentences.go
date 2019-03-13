@@ -15,37 +15,13 @@
 package cmd
 
 import (
-	"bufio"
-	"io"
 	"os"
 	"path/filepath"
 
+	"atec.pub/canon/lib"
+
 	"github.com/spf13/cobra"
-
-	"gopkg.in/neurosnap/sentences.v1"
-	"gopkg.in/neurosnap/sentences.v1/english"
 )
-
-var segmenter *sentences.DefaultSentenceTokenizer
-
-func newSentenceScanner(r io.Reader) *bufio.Scanner {
-
-	segmenter, _ = english.NewSentenceTokenizer(nil)
-
-	sc := bufio.NewScanner(r)
-	sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
-
-		sents := segmenter.Tokenize(string(data))
-		if len(sents) > 0 {
-			first := sents[0].Text
-			return len(first), []byte(first), nil
-		}
-
-		return 0, nil, nil
-	})
-
-	return sc
-}
 
 var sentencesCmd = &cobra.Command{
 	Use:   "sentences [dir]",
@@ -56,7 +32,7 @@ var sentencesCmd = &cobra.Command{
 
 		if argc == 0 {
 
-			sc := newSentenceScanner(os.Stdin)
+			sc := lib.NewSentenceScanner(os.Stdin)
 			for sc.Scan() {
 				println()
 				println("BEGIN")
@@ -80,7 +56,7 @@ var sentencesCmd = &cobra.Command{
 				f, _ := os.Open(path)
 				defer f.Close()
 
-				sc := newSentenceScanner(f)
+				sc := lib.NewSentenceScanner(f)
 				for sc.Scan() {
 					println()
 					println("BEGIN")

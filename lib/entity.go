@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"bufio"
 	"io"
 	"net/http"
 	"os"
@@ -22,7 +21,7 @@ func NewEnts(r io.ReadCloser) (map[string]uint, error) {
 	defer r.Close()
 
 	entities := make(map[string]uint)
-	sc := bufio.NewScanner(r)
+	sc := NewSentenceScanner(r)
 	for sc.Scan() {
 
 		text := sc.Text()
