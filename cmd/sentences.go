@@ -16,39 +16,88 @@ package cmd
 
 import (
 	"bufio"
+	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
+	"gopkg.in/neurosnap/sentences.v1"
 	"gopkg.in/neurosnap/sentences.v1/english"
 )
 
-// sentencesCmd represents the sentences command
+var segmenter *sentences.DefaultSentenceTokenizer
+
+func newSentenceScanner(r io.Reader) *bufio.Scanner {
+
+	segmenter, _ = english.NewSentenceTokenizer(nil)
+
+	sc := bufio.NewScanner(r)
+	sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+
+		sents := segmenter.Tokenize(string(data))
+		if len(sents) > 0 {
+			first := sents[0].Text
+			return len(first), []byte(first), nil
+		}
+
+		return 0, nil, nil
+	})
+
+	return sc
+}
+
 var sentencesCmd = &cobra.Command{
-	Use:   "sentences",
+	Use:   "sentences [dir]",
 	Short: "segment sentences",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		segmenter, _ := english.NewSentenceTokenizer(nil)
+		argc := len(args)
 
-		sc := bufio.NewScanner(os.Stdin)
-		sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if argc == 0 {
 
-			sents := segmenter.Tokenize(string(data))
-			if len(sents) > 0 {
-				first := sents[0].Text
-				return len(first), []byte(first), nil
+			sc := newSentenceScanner(os.Stdin)
+			for sc.Scan() {
+				println()
+				println("BEGIN")
+				os.Stdout.Write(sc.Bytes())
+				os.Stdout.Write([]byte("\n"))
+				println("END")
+				println()
 			}
 
-			return 0, nil, nil
-		})
-		for sc.Scan() {
-			println()
-			println("BEGIN")
-			os.Stdout.Write(sc.Bytes())
-			os.Stdout.Write([]byte("\n"))
-			println("END")
-			println()
+		} else if argc == 1 {
+
+			// sem := make(chan struct{}, 16)
+
+			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
+
+				println()
+				os.Stdout.Write([]byte(path))
+				os.Stdout.Write([]byte("\n"))
+				println()
+
+				f, _ := os.Open(path)
+				defer f.Close()
+
+				sc := newSentenceScanner(f)
+				for sc.Scan() {
+					println()
+					println("BEGIN")
+					os.Stdout.Write(sc.Bytes())
+					os.Stdout.Write([]byte("\n"))
+					println("END")
+					println()
+				}
+
+				os.Stdout.Write([]byte(path))
+				os.Stdout.Write([]byte("\n"))
+
+				return nil
+			})
+
+		} else {
+			panic("too many args")
 		}
 	},
 }
