@@ -5,17 +5,30 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/jdkato/prose/chunk"
 	"github.com/jdkato/prose/tag"
 	"github.com/jdkato/prose/tokenize"
+
+	"gopkg.in/neurosnap/sentences.v1"
+	"gopkg.in/neurosnap/sentences.v1/english"
 )
 
 var (
 	tokenizer = tokenize.NewTreebankWordTokenizer()
 	tagger    = tag.NewPerceptronTagger()
+
+	re        *regexp.Regexp
+	segmenter *sentences.DefaultSentenceTokenizer
 )
+
+func init() {
+	segmenter, _ = english.NewSentenceTokenizer(nil)
+
+	re = regexp.MustCompile(`\n`)
+}
 
 func NewEnts(r io.ReadCloser) (map[string]uint, error) {
 
@@ -23,9 +36,27 @@ func NewEnts(r io.ReadCloser) (map[string]uint, error) {
 
 	entities := make(map[string]uint)
 	sc := bufio.NewScanner(r)
+	sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+
+		// text := string(re.ReplaceAll(data, []byte(" ")))
+
+		sents := segmenter.Tokenize(string(data))
+		if len(sents) > 0 {
+			first := sents[0].Text
+			return len(first), []byte(first), nil
+		}
+
+		return 0, nil, nil
+	})
 	for sc.Scan() {
 
 		text := sc.Text()
+
+		println()
+		println("BEGIN SENT")
+		println(text)
+		println("END SENT")
+		println()
 
 		// chomp the boilerplate at the end
 		i := strings.Index(text, "End of the Project Gutenberg EBook")
@@ -68,4 +99,15 @@ func NewEntsFromURL(url, path string) (map[string]uint, error) {
 	}
 
 	return NewEnts(res.Body)
+}
+
+func scanSentences(data []byte, atEOF bool) (advance int, token []byte, err error) {
+
+	sents := tokenizer.Tokenize(string(data))
+	if len(sents) > 0 {
+		first := sents[0]
+		return len(first), []byte(first), nil
+	}
+
+	return 0, nil, nil
 }

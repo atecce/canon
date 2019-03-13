@@ -140,6 +140,7 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 # gopkg.in/neurosnap/sentences.v1 v1.0.6
 gopkg.in/neurosnap/sentences.v1
+gopkg.in/neurosnap/sentences.v1/english
 gopkg.in/neurosnap/sentences.v1/data
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

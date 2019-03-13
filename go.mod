@@ -28,5 +28,5 @@ require (
 	golang.org/x/net v0.0.0-20190313082753-5c2c250b6a70 // indirect
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
-	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
+	gopkg.in/neurosnap/sentences.v1 v1.0.6
 )
