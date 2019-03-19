@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"regexp"
+	"strings"
 
 	"gopkg.in/neurosnap/sentences.v1"
 	"gopkg.in/neurosnap/sentences.v1/english"
@@ -26,7 +27,7 @@ func NewSentenceScanner(r io.Reader) *bufio.Scanner {
 		sents := segmenter.Tokenize(string(data))
 		if len(sents) > 0 {
 			first := sents[0].Text
-			return len(first), newlines.ReplaceAll([]byte(first), []byte(" ")), nil
+			return len(first), newlines.ReplaceAll([]byte(strings.TrimSpace(first)), []byte(" ")), nil
 		}
 
 		return 0, nil, nil
