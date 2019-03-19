@@ -14,6 +14,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jdkato/prose v1.1.0
 	github.com/kennygrant/sanitize v1.2.4 // indirect
+	github.com/kr/pretty v0.1.0
 	github.com/labstack/echo/v4 v4.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/montanaflynn/stats v0.5.0 // indirect

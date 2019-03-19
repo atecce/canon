@@ -15,11 +15,17 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"atec.pub/canon/lib"
 
+	"github.com/kr/pretty"
 	"github.com/spf13/cobra"
 )
 
@@ -53,21 +59,52 @@ var sentencesCmd = &cobra.Command{
 				os.Stdout.Write([]byte("\n"))
 				println()
 
+				if info.IsDir() {
+					return nil
+				}
+
 				f, _ := os.Open(path)
 				defer f.Close()
 
+				var i uint
 				sc := lib.NewSentenceScanner(f)
 				for sc.Scan() {
-					println()
-					println("BEGIN")
-					os.Stdout.Write(sc.Bytes())
-					os.Stdout.Write([]byte("\n"))
-					println("END")
+
+					sentence := struct {
+						// TODO possibly put with concatenation of these id
+						Author string `json:"author"`
+						Work   string `json:"work"`
+						I      uint   `json:"i"`
+
+						Text string `json:"text"`
+					}{
+
+						filepath.Base(filepath.Dir(path)),
+						strings.TrimSuffix(info.Name(), ".txt"),
+						i,
+
+						sc.Text(),
+					}
+
+					b, _ := json.Marshal(sentence)
+
+					pretty.Println(string(b))
+
+					req, _ := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
+					req.Header.Add("Content-Type", "application/json")
+
+					res, _ := http.DefaultClient.Do(req)
+
+					pretty.Println(res.Status)
+
+					b, _ = ioutil.ReadAll(res.Body)
+
+					pretty.Println(string(b))
+
+					i++
+
 					println()
 				}
-
-				os.Stdout.Write([]byte(path))
-				os.Stdout.Write([]byte("\n"))
 
 				return nil
 			})

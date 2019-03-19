@@ -52,6 +52,10 @@ github.com/jdkato/prose/internal/util
 github.com/kennygrant/sanitize
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/kr/pretty v0.1.0
+github.com/kr/pretty
+# github.com/kr/text v0.1.0
+github.com/kr/text
 # github.com/labstack/echo/v4 v4.0.0
 github.com/labstack/echo/v4
 github.com/labstack/echo/v4/middleware
