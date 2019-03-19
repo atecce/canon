@@ -50,6 +50,8 @@ var sentencesCmd = &cobra.Command{
 
 		} else if argc == 1 {
 
+			// TODO sort out err handling and logging
+
 			sem := make(chan struct{}, 16)
 
 			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
@@ -64,7 +66,11 @@ var sentencesCmd = &cobra.Command{
 						<-sem
 					}()
 
-					f, _ := os.Open(path)
+					f, err := os.Open(path)
+					if err != nil {
+						pretty.Println(err)
+						return
+					}
 					defer f.Close()
 
 					var i uint
@@ -87,18 +93,34 @@ var sentencesCmd = &cobra.Command{
 							sc.Text(),
 						}
 
-						b, _ := json.Marshal(sentence)
+						b, err := json.Marshal(sentence)
+						if err != nil {
+							pretty.Println(err)
+							continue
+						}
 
 						pretty.Println(string(b))
 
-						req, _ := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
+						req, err := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
+						if err != nil {
+							pretty.Println(err)
+							continue
+						}
 						req.Header.Add("Content-Type", "application/json")
 
-						res, _ := http.DefaultClient.Do(req)
+						res, err := http.DefaultClient.Do(req)
+						if err != nil {
+							pretty.Println(err)
+							continue
+						}
 
 						pretty.Println(res.Status)
 
-						b, _ = ioutil.ReadAll(res.Body)
+						b, err = ioutil.ReadAll(res.Body)
+						if err != nil {
+							pretty.Println(err)
+							continue
+						}
 
 						pretty.Println(string(b))
 
