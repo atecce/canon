@@ -50,61 +50,64 @@ var sentencesCmd = &cobra.Command{
 
 		} else if argc == 1 {
 
-			// sem := make(chan struct{}, 16)
+			sem := make(chan struct{}, 16)
 
 			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
-
-				println()
-				os.Stdout.Write([]byte(path))
-				os.Stdout.Write([]byte("\n"))
-				println()
 
 				if info.IsDir() {
 					return nil
 				}
 
-				f, _ := os.Open(path)
-				defer f.Close()
+				sem <- struct{}{}
+				go func(path string, info os.FileInfo) {
+					defer func() {
+						<-sem
+					}()
 
-				var i uint
-				sc := lib.NewSentenceScanner(f)
-				for sc.Scan() {
+					f, _ := os.Open(path)
+					defer f.Close()
 
-					sentence := struct {
-						// TODO possibly put with concatenation of these id
-						Author string `json:"author"`
-						Work   string `json:"work"`
-						I      uint   `json:"i"`
+					var i uint
+					sc := lib.NewSentenceScanner(f)
+					for sc.Scan() {
 
-						Text string `json:"text"`
-					}{
+						sentence := struct {
+							// TODO possibly put with concatenation of these id
+							Author string `json:"author"`
+							Work   string `json:"work"`
+							I      uint   `json:"i"`
 
-						filepath.Base(filepath.Dir(path)),
-						strings.TrimSuffix(info.Name(), ".txt"),
-						i,
+							Text string `json:"text"`
+						}{
 
-						sc.Text(),
+							filepath.Base(filepath.Dir(path)),
+							strings.TrimSuffix(info.Name(), ".txt"),
+							i,
+
+							sc.Text(),
+						}
+
+						b, _ := json.Marshal(sentence)
+
+						pretty.Println(string(b))
+
+						req, _ := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
+						req.Header.Add("Content-Type", "application/json")
+
+						res, _ := http.DefaultClient.Do(req)
+
+						pretty.Println(res.Status)
+
+						b, _ = ioutil.ReadAll(res.Body)
+
+						pretty.Println(string(b))
+
+						i++
+
+						println()
 					}
 
-					b, _ := json.Marshal(sentence)
-
-					pretty.Println(string(b))
-
-					req, _ := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
-					req.Header.Add("Content-Type", "application/json")
-
-					res, _ := http.DefaultClient.Do(req)
-
-					pretty.Println(res.Status)
-
-					b, _ = ioutil.ReadAll(res.Body)
-
-					pretty.Println(string(b))
-
-					i++
-
-					println()
-				}
+				}(path, info)
 
 				return nil
 			})
