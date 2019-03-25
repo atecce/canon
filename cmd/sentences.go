@@ -25,7 +25,7 @@ import (
 
 	"atec.pub/canon/lib"
 
-	"github.com/kr/pretty"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -66,9 +66,11 @@ var sentencesCmd = &cobra.Command{
 						<-sem
 					}()
 
+					logrus.Info(path)
+
 					f, err := os.Open(path)
 					if err != nil {
-						pretty.Println(err)
+						logrus.Error(err)
 						return
 					}
 					defer f.Close()
@@ -95,38 +97,36 @@ var sentencesCmd = &cobra.Command{
 
 						b, err := json.Marshal(sentence)
 						if err != nil {
-							pretty.Println(err)
+							logrus.Error(err)
 							continue
 						}
 
-						pretty.Println(string(b))
+						logrus.Info(string(b))
 
 						req, err := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
 						if err != nil {
-							pretty.Println(err)
+							logrus.Error(err)
 							continue
 						}
 						req.Header.Add("Content-Type", "application/json")
 
 						res, err := http.DefaultClient.Do(req)
 						if err != nil {
-							pretty.Println(err)
+							logrus.Error(err)
 							continue
 						}
 
-						pretty.Println(res.Status)
+						logrus.Info(res.Status)
 
 						b, err = ioutil.ReadAll(res.Body)
 						if err != nil {
-							pretty.Println(err)
+							logrus.Error(err)
 							continue
 						}
 
-						pretty.Println(string(b))
+						logrus.Info(string(b))
 
 						i++
-
-						println()
 					}
 
 				}(path, info)
@@ -142,14 +142,4 @@ var sentencesCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(sentencesCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// sentencesCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// sentencesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
