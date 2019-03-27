@@ -10,6 +10,7 @@ import (
 
 	"atec.pub/canon/lib"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -34,66 +35,97 @@ var entitiesCmd = &cobra.Command{
 			}
 		} else {
 
-			// set up mongo
-			client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI("localhost:27017"))
-
-			collection := client.Database("canon").Collection("entities")
+			ctx := context.TODO()
 
 			sem := make(chan struct{}, 16)
 
-			// TODO checkpoint
+			// set up mongo
+			client, _ := mongo.Connect(ctx, options.Client().ApplyURI("localhost:27017"))
 
+			collection := client.Database("canon").Collection("entities")
+
+			// check for checkpoint
+			cur, err := collection.Find(ctx, bson.D{}, &options.FindOptions{
+				Sort: map[string]int{"_id": -1},
+			})
+			if err != nil {
+				logrus.Error(err)
+				os.Exit(1)
+			}
+			defer cur.Close(ctx)
+
+			var start bool
+			var checkpoint string
+			var i uint
+			for cur.Next(ctx) {
+				var res bson.M
+				cur.Decode(&res)
+
+				i++
+				if i == 16 {
+					checkpoint = res["_id"].(string)
+					break
+				}
+			}
+
+			// walk
 			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
 
 				if strings.Contains(path, ".txt") {
 
-					sem <- struct{}{}
+					author := filepath.Base(filepath.Dir(path)) // TODO maybe dedup author and work info from fileinfo
+					work := strings.TrimSuffix(info.Name(), ".txt")
 
-					go func(path string, info os.FileInfo) {
-						defer func() {
-							<-sem
-						}()
+					if author+work == checkpoint {
+						start = true
+					}
 
-						// TODO maybe dedup author and work info from fileinfo
-						author := filepath.Base(filepath.Dir(path))
-						work := strings.TrimSuffix(info.Name(), ".txt")
+					if start {
 
-						ents, err := lib.NewEntsFromPath(path)
-						if err != nil {
+						sem <- struct{}{}
+
+						go func(author, work string) {
+							defer func() {
+								<-sem
+							}()
+
+							ents, err := lib.NewEntsFromPath(path)
+							if err != nil {
+								logrus.WithFields(logrus.Fields{
+									"author": author,
+									"work":   work,
+								}).Error(err)
+								return
+							}
+
+							entities := struct {
+								ID       string `bson:"_id"`
+								Author   string
+								Work     string
+								Entities map[string]uint
+							}{
+								author + work,
+								author,
+								work,
+								ents,
+							}
+
 							logrus.WithFields(logrus.Fields{
 								"author": author,
 								"work":   work,
-							}).Error(err)
-							return
-						}
+							}).Info("extracting entities")
 
-						entities := struct {
-							ID       string `bson:"_id"`
-							Author   string
-							Work     string
-							Entities map[string]uint
-						}{
-							author + work,
-							author,
-							work,
-							ents,
-						}
+							_, err = collection.InsertOne(context.TODO(), entities)
+							if err != nil {
+								logrus.WithFields(logrus.Fields{
+									"author": author,
+									"work":   work,
+								}).Error(err)
+								return
+							}
 
-						logrus.WithFields(logrus.Fields{
-							"author": author,
-							"work":   work,
-						}).Info("extracting entities")
-
-						_, err = collection.InsertOne(context.TODO(), entities)
-						if err != nil {
-							logrus.WithFields(logrus.Fields{
-								"author": author,
-								"work":   work,
-							}).Error(err)
-							return
-						}
-
-					}(path, info)
+						}(author, work)
+					}
 				}
 
 				return nil
