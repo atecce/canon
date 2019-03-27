@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/kr/pretty"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -42,46 +41,59 @@ var entitiesCmd = &cobra.Command{
 
 			sem := make(chan struct{}, 16)
 
+			// TODO checkpoint
+
 			filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
 
 				if strings.Contains(path, ".txt") {
 
-					// TODO maybe dedup author and work info from fileinfo
-					author := filepath.Base(filepath.Dir(path))
-					work := strings.TrimSuffix(info.Name(), ".txt")
-
 					sem <- struct{}{}
 
-					go func(textPath, jsonPath string) {
+					go func(path string, info os.FileInfo) {
 						defer func() {
 							<-sem
 						}()
 
-						ents, err := lib.NewEntsFromPath(textPath)
+						// TODO maybe dedup author and work info from fileinfo
+						author := filepath.Base(filepath.Dir(path))
+						work := strings.TrimSuffix(info.Name(), ".txt")
+
+						ents, err := lib.NewEntsFromPath(path)
 						if err != nil {
-							log.Fatal(err)
+							logrus.WithFields(logrus.Fields{
+								"author": author,
+								"work":   work,
+							}).Error(err)
+							return
 						}
 
-						pretty.Println(ents)
-
 						entities := struct {
+							ID       string `bson:"_id"`
 							Author   string
 							Work     string
 							Entities map[string]uint
 						}{
+							author + work,
 							author,
 							work,
 							ents,
 						}
 
-						pretty.Println(entities)
+						logrus.WithFields(logrus.Fields{
+							"author": author,
+							"work":   work,
+						}).Info("extracting entities")
 
 						_, err = collection.InsertOne(context.TODO(), entities)
 						if err != nil {
-							log.Fatal(err)
+							logrus.WithFields(logrus.Fields{
+								"author": author,
+								"work":   work,
+							}).Error(err)
+							return
 						}
 
-					}(path, strings.Replace(path, ".txt", ".json", -1))
+					}(path, info)
 				}
 
 				return nil
