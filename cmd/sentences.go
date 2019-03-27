@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -67,7 +68,6 @@ var sentencesCmd = &cobra.Command{
 						author, work := lib.SplitAuthorWork(info, path)
 
 						sentence := struct {
-							// TODO possibly put with concatenation of these id
 							Author string `json:"author"`
 							Work   string `json:"work"`
 							I      uint   `json:"i"`
@@ -90,7 +90,7 @@ var sentencesCmd = &cobra.Command{
 
 						logrus.Info(string(b))
 
-						req, err := http.NewRequest(http.MethodPost, "http://localhost:9200/sentences/_doc/", bytes.NewReader(b))
+						req, err := http.NewRequest(http.MethodPut, "http://localhost:9200/sentences/_doc/"+url.QueryEscape(author+work+string(i)), bytes.NewReader(b))
 						if err != nil {
 							logrus.Error(err)
 							continue
