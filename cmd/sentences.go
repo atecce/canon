@@ -67,22 +67,19 @@ var sentencesCmd = &cobra.Command{
 
 						author, work := lib.SplitAuthorWork(info, path)
 
-						sentence := struct {
+						b, err := json.Marshal(struct {
 							Author string `json:"author"`
 							Work   string `json:"work"`
 							I      uint   `json:"i"`
 
 							Text string `json:"text"`
 						}{
-
 							author,
 							work,
 							i,
 
 							sc.Text(),
-						}
-
-						b, err := json.Marshal(sentence)
+						})
 						if err != nil {
 							logrus.Error(err)
 							continue

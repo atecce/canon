@@ -97,7 +97,12 @@ var entitiesCmd = &cobra.Command{
 								return
 							}
 
-							entities := struct {
+							logrus.WithFields(logrus.Fields{
+								"author": author,
+								"work":   work,
+							}).Info("extracting entities")
+
+							if _, err = collection.InsertOne(context.TODO(), struct {
 								ID       string `bson:"_id"`
 								Author   string
 								Work     string
@@ -107,15 +112,7 @@ var entitiesCmd = &cobra.Command{
 								author,
 								work,
 								ents,
-							}
-
-							logrus.WithFields(logrus.Fields{
-								"author": author,
-								"work":   work,
-							}).Info("extracting entities")
-
-							_, err = collection.InsertOne(context.TODO(), entities)
-							if err != nil {
+							}); err != nil {
 								logrus.WithFields(logrus.Fields{
 									"author": author,
 									"work":   work,
