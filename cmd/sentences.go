@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"atec.pub/canon/lib"
 
@@ -65,6 +64,8 @@ var sentencesCmd = &cobra.Command{
 					sc := lib.NewSentenceScanner(f)
 					for sc.Scan() {
 
+						author, work := lib.SplitAuthorWork(info, path)
+
 						sentence := struct {
 							// TODO possibly put with concatenation of these id
 							Author string `json:"author"`
@@ -74,8 +75,8 @@ var sentencesCmd = &cobra.Command{
 							Text string `json:"text"`
 						}{
 
-							filepath.Base(filepath.Dir(path)),
-							strings.TrimSuffix(info.Name(), ".txt"),
+							author,
+							work,
 							i,
 
 							sc.Text(),

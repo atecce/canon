@@ -73,8 +73,7 @@ var entitiesCmd = &cobra.Command{
 
 				if strings.Contains(path, ".txt") {
 
-					author := filepath.Base(filepath.Dir(path)) // TODO maybe dedup author and work info from fileinfo
-					work := strings.TrimSuffix(info.Name(), ".txt")
+					author, work := lib.SplitAuthorWork(info, path)
 
 					if author+work == checkpoint {
 						start = true
