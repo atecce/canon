@@ -15,11 +15,6 @@ import (
 )
 
 var (
-	authors      []string
-	authorsLower []string
-
-	lowerMap = make(map[string]string)
-
 	ctx context.Context
 
 	collection *mongo.Collection
