@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -78,10 +77,9 @@ func main() {
 
 		author := c.Param("author")
 
-		cur, _ := collection.Find(ctx, bson.D{
+		cur, err := collection.Find(ctx, bson.D{
 			{
-				"author",
-				author,
+				"author", author,
 			},
 		}, &options.FindOptions{
 			Projection: map[string]bool{
@@ -89,6 +87,9 @@ func main() {
 				"work": true,
 			},
 		})
+		if err != nil {
+			return err
+		}
 
 		var names []string
 		for cur.Next(ctx) {
@@ -107,12 +108,29 @@ func main() {
 		author := c.Param("author")
 		work := c.Param("work")
 
-		b, err := ioutil.ReadFile("/var/gutenberg/" + author + "/" + work + ".json")
-		if err != nil {
-			return err
+		res := collection.FindOne(ctx, bson.D{
+			{
+				"author", author,
+			},
+			{
+				"work", work,
+			},
+		}, &options.FindOneOptions{
+			Projection: map[string]bool{
+				"_id":      false,
+				"entities": true,
+			},
+		})
+
+		var doc bson.D
+		res.Decode(&doc)
+
+		ents := make(map[string]int64)
+		for _, ent := range doc[0].Value.(bson.D) {
+			ents[ent.Key] = ent.Value.(int64)
 		}
 
-		return c.String(http.StatusOK, string(b))
+		return c.JSON(http.StatusOK, ents)
 	})
 
 	e.StartTLS(":443", "/etc/canon/server.crt", "/etc/canon/server.key")
