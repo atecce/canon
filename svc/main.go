@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,21 +36,6 @@ func init() {
 	}
 
 	collection = client.Database("canon").Collection("entities")
-
-	fis, err := ioutil.ReadDir("/var/gutenberg/")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, fi := range fis {
-
-		author := fi.Name()
-		authorLower := strings.ToLower(author)
-
-		authors = append(authors, author)
-		authorsLower = append(authorsLower, authorLower)
-		lowerMap[authorLower] = author
-	}
 }
 
 func main() {
@@ -94,15 +78,25 @@ func main() {
 
 		author := c.Param("author")
 
-		fis, err := ioutil.ReadDir("/var/gutenberg/" + author)
-		if err != nil {
-			return err
-		}
+		cur, _ := collection.Find(ctx, bson.D{
+			{
+				"author",
+				author,
+			},
+		}, &options.FindOptions{
+			Projection: map[string]bool{
+				"_id":  false,
+				"work": true,
+			},
+		})
 
 		var names []string
-		for _, fi := range fis {
-			name := fi.Name()
-			names = append(names, strings.TrimSuffix(name, filepath.Ext(name)))
+		for cur.Next(ctx) {
+
+			var work bson.D
+			cur.Decode(&work)
+
+			names = append(names, work[0].Value.(string))
 		}
 
 		return c.JSON(http.StatusOK, names)
