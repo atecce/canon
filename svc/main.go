@@ -71,44 +71,21 @@ func main() {
 	e.GET("/authors", func(c echo.Context) error {
 
 		res := c.Response()
+		pattern := c.QueryParam("search")
 
-		items, _ := collection.Distinct(ctx, "author", bson.D{})
+		// TODO attempt to filter on query
 
-		for _, item := range items {
-			res.Write([]byte(item.(string) + "\n"))
+		items, err := collection.Distinct(ctx, "author", bson.D{})
+		if err != nil {
+			return err
 		}
 
-		// cur, _ := collection.Find(ctx, bson.D{}, &options.FindOptions{
-		// 	Projection: map[string]bool{
-		// 		"_id":    false,
-		// 		"author": true,
-		// 	},
-		// })
-
-		// for cur.Next(ctx) {
-		// 	var item interface{}
-		// 	cur.Decode(&item)
-		// 	pretty.Println(item)
-		// }
-
-		// pattern := c.QueryParam("search")
-
-		// res := c.Response()
-
-		// res.WriteHeader(http.StatusOK)
-
-		// var matches []string
-		// for _, authorLower := range authorsLower {
-		// 	if strings.Contains(authorLower, strings.ToLower(pattern)) {
-		// 		matches = append(matches, authorLower)
-		// 	}
-		// }
-
-		// for _, match := range matches {
-		// 	if _, err := res.Write([]byte(lowerMap[match] + "\n")); err != nil {
-		// 		return err
-		// 	}
-		// }
+		for _, item := range items {
+			itemStr := item.(string)
+			if strings.Contains(strings.ToLower(itemStr), strings.ToLower(pattern)) {
+				res.Write([]byte(itemStr + "\n"))
+			}
+		}
 
 		return nil
 	})
