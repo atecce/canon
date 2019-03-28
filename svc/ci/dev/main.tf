@@ -110,13 +110,8 @@ resource "google_compute_instance" "default" {
 
             "cp /keybase/private/atec/etc/server.crt . && sudo cp server.crt /etc/canon/",
             "cp /keybase/private/atec/etc/server.key . && sudo cp server.key /etc/canon/",
+
             "cp /keybase/public/atec/etc/canon.service . && sudo cp canon.service /etc/systemd/system/",
-
-            # files (deprecated)
-            "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.tar.gz .",
-            "sudo tar -xvf entities.tar.gz -C /var/",
-
-            # mongo
             "cp /keybase/public/atec/etc/yum.repos.d/mongodb-org-4.0.repo . && sudo cp mongodb-org-4.0.repo /etc/yum.repos.d/",
 
             "sudo yum install -y mongodb-org",
