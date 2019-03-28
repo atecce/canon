@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -16,9 +21,23 @@ var (
 	authorsLower []string
 
 	lowerMap = make(map[string]string)
+
+	ctx context.Context
+
+	collection *mongo.Collection
 )
 
 func init() {
+
+	ctx = context.TODO()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	collection = client.Database("canon").Collection("entities")
+
 	fis, err := ioutil.ReadDir("/var/gutenberg/")
 	if err != nil {
 		log.Fatal(err)
@@ -51,24 +70,45 @@ func main() {
 
 	e.GET("/authors", func(c echo.Context) error {
 
-		pattern := c.QueryParam("search")
-
 		res := c.Response()
 
-		res.WriteHeader(http.StatusOK)
+		items, _ := collection.Distinct(ctx, "author", bson.D{})
 
-		var matches []string
-		for _, authorLower := range authorsLower {
-			if strings.Contains(authorLower, strings.ToLower(pattern)) {
-				matches = append(matches, authorLower)
-			}
+		for _, item := range items {
+			res.Write([]byte(item.(string) + "\n"))
 		}
 
-		for _, match := range matches {
-			if _, err := res.Write([]byte(lowerMap[match] + "\n")); err != nil {
-				return err
-			}
-		}
+		// cur, _ := collection.Find(ctx, bson.D{}, &options.FindOptions{
+		// 	Projection: map[string]bool{
+		// 		"_id":    false,
+		// 		"author": true,
+		// 	},
+		// })
+
+		// for cur.Next(ctx) {
+		// 	var item interface{}
+		// 	cur.Decode(&item)
+		// 	pretty.Println(item)
+		// }
+
+		// pattern := c.QueryParam("search")
+
+		// res := c.Response()
+
+		// res.WriteHeader(http.StatusOK)
+
+		// var matches []string
+		// for _, authorLower := range authorsLower {
+		// 	if strings.Contains(authorLower, strings.ToLower(pattern)) {
+		// 		matches = append(matches, authorLower)
+		// 	}
+		// }
+
+		// for _, match := range matches {
+		// 	if _, err := res.Write([]byte(lowerMap[match] + "\n")); err != nil {
+		// 		return err
+		// 	}
+		// }
 
 		return nil
 	})
