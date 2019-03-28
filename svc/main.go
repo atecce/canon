@@ -18,6 +18,8 @@ var (
 	ctx context.Context
 
 	collection *mongo.Collection
+
+	authors []string
 )
 
 func init() {
@@ -30,6 +32,15 @@ func init() {
 	}
 
 	collection = client.Database("canon").Collection("entities")
+
+	authorDocs, err := collection.Distinct(ctx, "author", bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, doc := range authorDocs {
+		authors = append(authors, doc.(string))
+	}
 }
 
 func main() {
@@ -51,17 +62,9 @@ func main() {
 		res := c.Response()
 		pattern := c.QueryParam("search")
 
-		// TODO attempt to filter on query
-
-		items, err := collection.Distinct(ctx, "author", bson.D{})
-		if err != nil {
-			return err
-		}
-
-		for _, item := range items {
-			itemStr := item.(string)
-			if strings.Contains(strings.ToLower(itemStr), strings.ToLower(pattern)) {
-				res.Write([]byte(itemStr + "\n"))
+		for _, author := range authors {
+			if strings.Contains(strings.ToLower(author), strings.ToLower(pattern)) {
+				res.Write([]byte(author + "\n"))
 			}
 		}
 
