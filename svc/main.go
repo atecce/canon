@@ -19,7 +19,9 @@ var (
 
 	collection *mongo.Collection
 
-	authors []string
+	// kept in memory at all times for perf on /authors?search
+	lowerAuthors   []string
+	lowerAuthorMap = make(map[string]string)
 )
 
 func init() {
@@ -39,7 +41,12 @@ func init() {
 	}
 
 	for _, doc := range authorDocs {
-		authors = append(authors, doc.(string))
+
+		author := doc.(string)
+		lowerAuthor := strings.ToLower(author)
+
+		lowerAuthorMap[lowerAuthor] = author
+		lowerAuthors = append(lowerAuthors, lowerAuthor)
 	}
 }
 
@@ -62,9 +69,18 @@ func main() {
 		res := c.Response()
 		pattern := c.QueryParam("search")
 
-		for _, author := range authors {
-			if strings.Contains(strings.ToLower(author), strings.ToLower(pattern)) {
-				res.Write([]byte(author + "\n"))
+		res.WriteHeader(http.StatusOK)
+
+		var matches []string
+		for _, lowerAuthor := range lowerAuthors {
+			if strings.Contains(lowerAuthor, strings.ToLower(pattern)) {
+				matches = append(matches, lowerAuthor)
+			}
+		}
+
+		for _, match := range matches {
+			if _, err := res.Write([]byte(lowerAuthorMap[match] + "\n")); err != nil {
+				return err
 			}
 		}
 
@@ -108,10 +124,7 @@ func main() {
 
 		res := collection.FindOne(ctx, bson.D{
 			{
-				"author", author,
-			},
-			{
-				"work", work,
+				"_id", author + work,
 			},
 		}, &options.FindOneOptions{
 			Projection: map[string]bool{
@@ -121,7 +134,9 @@ func main() {
 		})
 
 		var doc bson.D
-		res.Decode(&doc)
+		if err := res.Decode(&doc); err != nil {
+			return err
+		}
 
 		ents := make(map[string]int64)
 		for _, ent := range doc[0].Value.(bson.D) {

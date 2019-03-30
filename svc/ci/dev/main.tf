@@ -44,21 +44,20 @@ resource "google_compute_firewall" "canon-dev" {
 
     # https://www.cloudflare.com/ips-v4
     source_ranges = [
-        "0.0.0.0/0",
-#        "173.245.48.0/20",
-#        "103.21.244.0/22",
-#        "103.22.200.0/22",
-#        "103.31.4.0/22",
-#        "141.101.64.0/18",
-#        "108.162.192.0/18",
-#        "190.93.240.0/20",
-#        "188.114.96.0/20",
-#        "197.234.240.0/22",
-#        "198.41.128.0/17",
-#        "162.158.0.0/15",
-#        "104.16.0.0/12",
-#        "172.64.0.0/13",
-#        "131.0.72.0/22"
+        "173.245.48.0/20",
+        "103.21.244.0/22",
+        "103.22.200.0/22",
+        "103.31.4.0/22",
+        "141.101.64.0/18",
+        "108.162.192.0/18",
+        "190.93.240.0/20",
+        "188.114.96.0/20",
+        "197.234.240.0/22",
+        "198.41.128.0/17",
+        "162.158.0.0/15",
+        "104.16.0.0/12",
+        "172.64.0.0/13",
+        "131.0.72.0/22"
     ]
     allow = {
         protocol = "tcp"
@@ -120,6 +119,11 @@ resource "google_compute_instance" "default" {
             
             "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.bson.gz .",
             "mongorestore --archive=entities.bson.gz --gzip -vvvvv",
+
+            "mongo << EOF",
+            "use canon",
+            "db.entities.createIndex({ author: 1 })",
+            "EOF"
 
             # TODO build and deploy
         ]
