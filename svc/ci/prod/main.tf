@@ -84,7 +84,7 @@ resource "google_compute_instance" "default" {
             nat_ip = "${google_compute_address.static.address}"
         }
     }
-    machine_type = "g1-small"
+    machine_type = "n1-standard-1"
     boot_disk = {
         initialize_params = {
             image = "centos-cloud/centos-7"
@@ -102,18 +102,28 @@ resource "google_compute_instance" "default" {
         }
         inline = [
             "sudo yum install -y https://prerelease.keybase.io/keybase_i386.rpm",
-            "run_keybase",
 
+            "run_keybase",
             "keybase oneshot -u atec --paperkey '${var.kb_key}'",
 
-            # root doesn't own kbfs
             "sudo mkdir -p /etc/canon/",
+
             "cp /keybase/private/atec/etc/server.crt . && sudo cp server.crt /etc/canon/",
             "cp /keybase/private/atec/etc/server.key . && sudo cp server.key /etc/canon/",
-            "cp /keybase/public/atec/etc/canon.service . && sudo cp canon.service /etc/systemd/system/",
 
-            "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.tar.gz .",
-            "sudo tar -xvf entities.tar.gz -C /var",
+            "cp /keybase/public/atec/etc/canon.service . && sudo cp canon.service /etc/systemd/system/",
+            "cp /keybase/public/atec/etc/yum.repos.d/mongodb-org-4.0.repo . && sudo cp mongodb-org-4.0.repo /etc/yum.repos.d/",
+
+            "sudo yum install -y mongodb-org",
+            "sudo systemctl start mongod",
+            
+            "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.bson.gz .",
+            "mongorestore --archive=entities.bson.gz --gzip -vvvvv",
+
+            "mongo << EOF",
+            "use canon",
+            "db.entities.createIndex({ author: 1 })",
+            "EOF"
 
             # TODO build and deploy
         ]
