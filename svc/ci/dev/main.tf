@@ -1,3 +1,9 @@
+terraform {
+    backend "local" {
+        path = "/keybase/private/atec/etc/canon.tfstate"
+    }
+}
+
 provider "cloudflare" {
     email = "root@atec.pub"
     token = "${file("/keybase/private/atec/etc/cloudflare/token")}"
@@ -97,6 +103,7 @@ resource "google_compute_instance" "default" {
         connection = {
             type = "ssh"
             user = "atec"
+            # TODO put in kbfs
             private_key = "${file("~/.ssh/google_compute_engine")}"
             timeout = "120s"
         }
@@ -120,6 +127,7 @@ resource "google_compute_instance" "default" {
             "rsync -ah --progress /keybase/public/atec/data/gutenberg/entities.bson.gz .",
             "mongorestore --archive=entities.bson.gz --gzip -vvvvv",
 
+            # TODO index should be already created, probably
             "mongo << EOF",
             "use canon",
             "db.entities.createIndex({ author: 1 })",
