@@ -1,6 +1,6 @@
 terraform {
     backend "local" {
-        path = "/keybase/private/atec/etc/canon.tfstate"
+        path = "/keybase/private/atec/var/canon-dev.tfstate"
     }
 }
 

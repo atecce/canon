@@ -1,3 +1,9 @@
+terraform {
+    backend "local" {
+        path = "/keybase/private/atec/var/canon.tfstate"
+    }
+}
+
 provider "cloudflare" {
     email = "root@atec.pub"
     token = "${file("/keybase/private/atec/etc/cloudflare/token")}"
