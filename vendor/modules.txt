@@ -19,11 +19,11 @@ github.com/go-stack/stack
 # github.com/gobwas/glob v0.2.3
 github.com/gobwas/glob
 github.com/gobwas/glob/compiler
-github.com/gobwas/glob/syntax
 github.com/gobwas/glob/match
+github.com/gobwas/glob/syntax
 github.com/gobwas/glob/syntax/ast
-github.com/gobwas/glob/util/runes
 github.com/gobwas/glob/syntax/lexer
+github.com/gobwas/glob/util/runes
 github.com/gobwas/glob/util/strings
 # github.com/gocolly/colly v1.2.0
 github.com/gocolly/colly
@@ -35,23 +35,23 @@ github.com/golang/protobuf/proto
 github.com/golang/snappy
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
-github.com/hashicorp/hcl/hcl/printer
 github.com/hashicorp/hcl/hcl/ast
 github.com/hashicorp/hcl/hcl/parser
-github.com/hashicorp/hcl/hcl/token
-github.com/hashicorp/hcl/json/parser
+github.com/hashicorp/hcl/hcl/printer
 github.com/hashicorp/hcl/hcl/scanner
 github.com/hashicorp/hcl/hcl/strconv
+github.com/hashicorp/hcl/hcl/token
+github.com/hashicorp/hcl/json/parser
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/jdkato/prose v1.1.0
 github.com/jdkato/prose/chunk
-github.com/jdkato/prose/tag
-github.com/jdkato/prose/tokenize
 github.com/jdkato/prose/internal/model
 github.com/jdkato/prose/internal/util
+github.com/jdkato/prose/tag
+github.com/jdkato/prose/tokenize
 # github.com/kennygrant/sanitize v1.2.4
 github.com/kennygrant/sanitize
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
@@ -60,9 +60,9 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/labstack/echo/v4
 github.com/labstack/echo/v4/middleware
 # github.com/labstack/gommon v0.2.8
+github.com/labstack/gommon/bytes
 github.com/labstack/gommon/color
 github.com/labstack/gommon/log
-github.com/labstack/gommon/bytes
 github.com/labstack/gommon/random
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
@@ -111,78 +111,87 @@ github.com/xdg/stringprep
 github.com/yhat/scrape
 # go.mongodb.org/mongo-driver v1.0.0
 go.mongodb.org/mongo-driver/bson
-go.mongodb.org/mongo-driver/mongo
-go.mongodb.org/mongo-driver/mongo/options
 go.mongodb.org/mongo-driver/bson/bsoncodec
 go.mongodb.org/mongo-driver/bson/bsonrw
 go.mongodb.org/mongo-driver/bson/bsontype
 go.mongodb.org/mongo-driver/bson/primitive
-go.mongodb.org/mongo-driver/x/bsonx/bsoncore
 go.mongodb.org/mongo-driver/event
+go.mongodb.org/mongo-driver/internal
+go.mongodb.org/mongo-driver/mongo
+go.mongodb.org/mongo-driver/mongo/options
 go.mongodb.org/mongo-driver/mongo/readconcern
 go.mongodb.org/mongo-driver/mongo/readpref
 go.mongodb.org/mongo-driver/mongo/writeconcern
+go.mongodb.org/mongo-driver/tag
+go.mongodb.org/mongo-driver/version
 go.mongodb.org/mongo-driver/x/bsonx
+go.mongodb.org/mongo-driver/x/bsonx/bsoncore
 go.mongodb.org/mongo-driver/x/mongo/driver
 go.mongodb.org/mongo-driver/x/mongo/driver/auth
+go.mongodb.org/mongo-driver/x/mongo/driver/auth/internal/gssapi
 go.mongodb.org/mongo-driver/x/mongo/driver/session
 go.mongodb.org/mongo-driver/x/mongo/driver/topology
 go.mongodb.org/mongo-driver/x/mongo/driver/uuid
+go.mongodb.org/mongo-driver/x/network/address
 go.mongodb.org/mongo-driver/x/network/command
+go.mongodb.org/mongo-driver/x/network/compressor
 go.mongodb.org/mongo-driver/x/network/connection
 go.mongodb.org/mongo-driver/x/network/connstring
 go.mongodb.org/mongo-driver/x/network/description
 go.mongodb.org/mongo-driver/x/network/result
-go.mongodb.org/mongo-driver/tag
 go.mongodb.org/mongo-driver/x/network/wiremessage
-go.mongodb.org/mongo-driver/x/mongo/driver/auth/internal/gssapi
-go.mongodb.org/mongo-driver/x/network/address
-go.mongodb.org/mongo-driver/version
-go.mongodb.org/mongo-driver/x/network/compressor
-go.mongodb.org/mongo-driver/internal
-# golang.org/x/crypto v0.0.0-20190320223903-b7391e95e576
-golang.org/x/crypto/ssh/terminal
-golang.org/x/crypto/acme/autocert
+# golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 golang.org/x/crypto/acme
+golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20190313082753-5c2c250b6a70
-golang.org/x/net/html
-golang.org/x/net/html/charset
-golang.org/x/net/html/atom
+golang.org/x/crypto/ssh/terminal
+# golang.org/x/net v0.7.0
 golang.org/x/net/context
-# golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
+golang.org/x/net/html
+golang.org/x/net/html/atom
+golang.org/x/net/html/charset
+golang.org/x/net/idna
+# golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc
+# golang.org/x/sys v0.5.0
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.0
-golang.org/x/text/transform
-golang.org/x/text/unicode/norm
+# golang.org/x/term v0.5.0
+golang.org/x/term
+# golang.org/x/text v0.7.0
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
-golang.org/x/text/encoding/internal/identifier
 golang.org/x/text/encoding/internal
+golang.org/x/text/encoding/internal/identifier
 golang.org/x/text/encoding/japanese
 golang.org/x/text/encoding/korean
 golang.org/x/text/encoding/simplifiedchinese
 golang.org/x/text/encoding/traditionalchinese
 golang.org/x/text/encoding/unicode
-golang.org/x/text/language
-golang.org/x/text/internal/utf8internal
-golang.org/x/text/runes
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
+golang.org/x/text/internal/utf8internal
+golang.org/x/text/language
+golang.org/x/text/runes
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
 # google.golang.org/appengine v1.4.0
-google.golang.org/appengine/urlfetch
 google.golang.org/appengine/internal
-google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/datastore
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
+google.golang.org/appengine/internal/urlfetch
+google.golang.org/appengine/urlfetch
 # gopkg.in/neurosnap/sentences.v1 v1.0.6
 gopkg.in/neurosnap/sentences.v1
-gopkg.in/neurosnap/sentences.v1/english
 gopkg.in/neurosnap/sentences.v1/data
+gopkg.in/neurosnap/sentences.v1/english
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
