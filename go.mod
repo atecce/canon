@@ -37,7 +37,7 @@ require (
 	golang.org/x/crypto v0.0.0-20190320223903-b7391e95e576 // indirect
 	golang.org/x/net v0.0.0-20190313082753-5c2c250b6a70 // indirect
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
-	golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6
